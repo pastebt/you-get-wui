@@ -10,7 +10,7 @@ from wsgiref.simple_server import WSGIServer
 
 from db import init_db, add_one_url, query_urls, set_flag
 from db import pick_url
-from dwn import Manager
+from dwn import Manager, _port
 
 
 def html_head():
@@ -139,6 +139,6 @@ init_db()
 mon = Manager()
 s2m = mon.s2m
 mon.start()
-run(server=MySvr, host='')
+run(server=MySvr, host='', port=_port)
 #run(host='', port=8080)
 mon.stop()
