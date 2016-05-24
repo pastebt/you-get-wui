@@ -106,7 +106,7 @@ def update_filename(mid, fn):
 
 def dump_urls():
     for uobj in query_urls():
-        print(uobj)
+        print(uobj.name, "\n", uobj.url, "\n")
 
 
 def usage():
