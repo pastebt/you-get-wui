@@ -30,11 +30,17 @@ class WFP(object):
 
 
 def work(cfg, uobj):
-    #download_main(any_download, None, [uobj.url], None,
-    #              output_dir="../", merge=False, info_only=False)
     for sect in cf.sections():
         if not sect.startswith('download_'):
             continue
+        dn = cfg[sect]['dir']
+        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OURDIR='./')
+        p = Popen("cd %s && %s" % (dn, cmd), shell=True) #, stderr=STDOUT, stdout=PIPE)
+        #for l in p.read():
+        #    print(l, end="")
+        p.wait()
+        if p.returncode == 0:
+            break
 
 
 class Worker(Process):
@@ -49,10 +55,6 @@ class Worker(Process):
                 break
             sys.stdout = WFP("worker", self.s2m, uobj.mid)
             sys.stderr = WFP("error", self.s2m, uobj.mid)
-            #uobj = pick_url(mid)
-            #if not uobj:
-            #    print("Nothing to Start, mid=%s" % mid)
-            #    continue
             print("Process mid=%d Start" % uobj.mid)
             try:
                 work(self.cfg, uobj)
@@ -70,7 +72,7 @@ class Manager(Process):
         self.s2m = Queue()  # message Manager receive from worker and svr
         self.m2w = Queue()  # message send to works
         self.cfg = cfg
-        wnum = 3
+        wnum = 1    # 3
         self.works = [0] * wnum
         for i in range(wnum):
             self.works[i] = Worker(self.cfg, self.s2m, self.m2w)
