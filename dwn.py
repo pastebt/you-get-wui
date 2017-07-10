@@ -5,54 +5,35 @@ import sys
 import select
 import traceback
 from multiprocessing import Pipe, Queue, Process
+from subprocess import Popen
 
-
-#if getattr(sys, 'frozen', False):
-#    # The application is frozen
-#    _filepath = os.path.dirname(os.path.realpath(sys.executable))
-#else:
-#    # The application is not frozen
-#    # Change this bit to match where you store your data files:
-#    _filepath = os.path.dirname(os.path.realpath(__file__))
 
 _srcdir = '../you-get/src/'
 _port = 8080
-
-#sys.path.insert(1, os.path.join(_filepath, _srcdir))
-#sys.path.insert(1, _srcdir)
-#from you_get.common import any_download, download_main
 
 from db import WORK, WAIT, STOP
 from db import pick_url, update_filename, set_flag, get_by_flag
 
 
-def usage():
-    print('Usage: ', sys.argv[0], '[-p lisent_port] [-y you-get-path]')
-    print('    -p server listen port, default is 8080')
-    print('    -y you-get path, default is ../you-get/src/')
-    sys.exit(1)
-
-
-if len(sys.argv) not in (1, 3, 5):
-    usage()
-
-amap = dict(zip(sys.argv[1::2], sys.argv[2::2]))
-if '-y' in amap:
-    _srcdir = amap['-y']
-    del amap['-y']
-if '-p' in amap:
-    _port = int(amap['-p'])
-    del amap['-p']
-if amap:
-    usage()
-
-
-try:
-    sys.path.insert(1, _srcdir)
-    from you_get.common import any_download, download_main
-except:
-    print("can not find you-get at", _srcdir)
-    usage()
+#def usage():
+#    print('Usage: ', sys.argv[0], '[-p lisent_port] [-y you-get-path]')
+#    print('    -p server listen port, default is 8080')
+#    print('    -y you-get path, default is ../you-get/src/')
+#    sys.exit(1)
+#
+#
+#if len(sys.argv) not in (1, 3, 5):
+#    usage()
+#
+#amap = dict(zip(sys.argv[1::2], sys.argv[2::2]))
+#if '-y' in amap:
+#    _srcdir = amap['-y']
+#    del amap['-y']
+#if '-p' in amap:
+#    _port = int(amap['-p'])
+#    del amap['-p']
+#if amap:
+#    usage()
 
 
 class WFP(object):
@@ -70,9 +51,6 @@ class WFP(object):
 
     def flush(self):
         pass
-
-
-#you-get-cmd = '../you-get/you-get'
 
 
 def work(uobj):

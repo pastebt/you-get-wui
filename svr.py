@@ -8,8 +8,8 @@ from bottle import static_file
 from socketserver import ForkingMixIn, ThreadingMixIn
 from wsgiref.simple_server import WSGIServer
 
-from db import init_db, add_one_url, query_urls, set_flag
-from db import pick_url
+from db import init_db, set_flag
+from db import pick_url, add_one_url, query_urls
 from dwn import Manager, _port
 
 
@@ -135,10 +135,17 @@ class MySvr(WSGIRefServer):
         WSGIRefServer.__init__(self, host, port, **options)
 
 
-init_db()
-mon = Manager()
-s2m = mon.s2m
-mon.start()
-run(server=MySvr, host='', port=_port)
-#run(host='', port=8080)
-mon.stop()
+def usage():
+    print('you-get-wui server')
+    print('Usage:', sys.argv[0], '-c [wui.cfg]')
+    sys.exit(1)
+
+
+if __name__ == '__main__':
+    init_db()
+    mon = Manager()
+    s2m = mon.s2m
+    mon.start()
+    run(server=MySvr, host='', port=_port)
+    #run(host='', port=8080)
+    mon.stop()
