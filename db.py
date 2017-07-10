@@ -25,7 +25,7 @@ class SDB(object):
         self.conn.close()
 
 
-def init_db():
+def init_db(cfg):
     with SDB() as c:
         c.execute('''
         create table if not exists aviurl (
@@ -94,8 +94,8 @@ def get_by_flag(f):
 def set_flag(mid, act):
     fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
     with SDB() as c:
-        c.execute("update aviurl set flag=? where rowid=?",
-                  (fm.get(act, act), mid))
+        c.execute("update aviurl set flag=? where rowid=? and flag not in (?, ?)",
+                  (fm.get(act, act), mid, fm['start'], fm['stop']))
 
 
 def update_filename(mid, fn):

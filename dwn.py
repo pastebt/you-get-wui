@@ -5,35 +5,11 @@ import sys
 import select
 import traceback
 from multiprocessing import Pipe, Queue, Process
-from subprocess import Popen
+from subprocess import Popen, STDOUT, PIPE
 
-
-_srcdir = '../you-get/src/'
-_port = 8080
 
 from db import WORK, WAIT, STOP
 from db import pick_url, update_filename, set_flag, get_by_flag
-
-
-#def usage():
-#    print('Usage: ', sys.argv[0], '[-p lisent_port] [-y you-get-path]')
-#    print('    -p server listen port, default is 8080')
-#    print('    -y you-get path, default is ../you-get/src/')
-#    sys.exit(1)
-#
-#
-#if len(sys.argv) not in (1, 3, 5):
-#    usage()
-#
-#amap = dict(zip(sys.argv[1::2], sys.argv[2::2]))
-#if '-y' in amap:
-#    _srcdir = amap['-y']
-#    del amap['-y']
-#if '-p' in amap:
-#    _port = int(amap['-p'])
-#    del amap['-p']
-#if amap:
-#    usage()
 
 
 class WFP(object):
@@ -53,15 +29,18 @@ class WFP(object):
         pass
 
 
-def work(uobj):
-    download_main(any_download, None, [uobj.url], None,
-                  output_dir="../", merge=False, info_only=False)
+def work(cfg, uobj):
+    #download_main(any_download, None, [uobj.url], None,
+    #              output_dir="../", merge=False, info_only=False)
+    for sect in cf.sections():
+        if not sect.startswith('download_'):
+            continue
 
 
 class Worker(Process):
-    def __init__(self, s2m, m2w):
+    def __init__(self, cfg, s2m, m2w):
         Process.__init__(self)
-        self.s2m, self.m2w = s2m, m2w
+        self.cfg, self.s2m, self.m2w = cfg, s2m, m2w
 
     def run(self):
         while True:
@@ -76,7 +55,7 @@ class Worker(Process):
             #    continue
             print("Process mid=%d Start" % uobj.mid)
             try:
-                work(uobj)
+                work(self.cfg, uobj)
             except:
                 t, l, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, l, tb))
@@ -86,13 +65,15 @@ class Worker(Process):
 
 
 class Manager(Process):
-    def __init__(self, wnum=3):
+    def __init__(self, cfg):
         Process.__init__(self)
         self.s2m = Queue()  # message Manager receive from worker and svr
         self.m2w = Queue()  # message send to works
+        self.cfg = cfg
+        wnum = 3
         self.works = [0] * wnum
         for i in range(wnum):
-            self.works[i] = Worker(self.s2m, self.m2w)
+            self.works[i] = Worker(self.cfg, self.s2m, self.m2w)
             self.works[i].start()
 
     def stop(self):

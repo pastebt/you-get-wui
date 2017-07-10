@@ -1,16 +1,18 @@
 #! /usr/bin/python3
 
+import sys
+import configparser
+from wsgiref.simple_server import WSGIServer
+from socketserver import ForkingMixIn, ThreadingMixIn
+
 from bottle import WSGIRefServer
 from bottle import get, post, request
 from bottle import run, template, route, redirect
 from bottle import static_file
 
-from socketserver import ForkingMixIn, ThreadingMixIn
-from wsgiref.simple_server import WSGIServer
-
+from dwn import Manager
 from db import init_db, set_flag
 from db import pick_url, add_one_url, query_urls
-from dwn import Manager, _port
 
 
 def html_head():
@@ -102,7 +104,6 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, "wait")
-        #mon.s2m.put({"who": "svr", "mid": mid})
         s2m.put({"who": "svr", "mid": mid})
     redirect("/")
 
@@ -138,14 +139,22 @@ class MySvr(WSGIRefServer):
 def usage():
     print('you-get-wui server')
     print('Usage:', sys.argv[0], '-c [wui.cfg]')
+    print('')
     sys.exit(1)
 
 
 if __name__ == '__main__':
-    init_db()
+    if len(sys.argv) not in (2, 3) or sys.argv[1] != '-c':
+        usage()
+    cfgfn = "wui.cfg"
+    if len(sys.argv) == 3:
+        cfgfn = sys.argv[2]
+    cfg = configparser.ConfigParser()
+    cfg.read(cfgfn)
+
+    init_db(cfg)
     mon = Manager()
     s2m = mon.s2m
     mon.start()
-    run(server=MySvr, host='', port=_port)
-    #run(host='', port=8080)
+    run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()
