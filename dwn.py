@@ -39,10 +39,13 @@ def work(cfg, uobj):
         #for l in p.read():
         #    print(l, end="")
         p.wait()
+        print(sect, p.returncode)
         if p.returncode == 0:
+            print("mid %d done" % uobj.mid)
             set_flag(uobj.mid, DONE)
             break
     else:
+        print("mid %d failed" % uobj.mid)
         set_flag(uobj.mid, FAIL)
 
 
@@ -56,17 +59,19 @@ class Worker(Process):
             uobj = self.m2w.get()
             if uobj is None:
                 break
-            sys.stdout = WFP("worker", self.s2m, uobj.mid)
-            sys.stderr = WFP("error", self.s2m, uobj.mid)
-            print("Process mid=%d Start" % uobj.mid)
-            try:
-                work(self.cfg, uobj)
-            except:
-                t, l, tb = sys.exc_info()
-                msg = "".join(traceback.format_exception(t, l, tb))
-                print("Process mid=%d Fail\n%s" % (uobj.mid, msg))
-            else:
-                print("Process mid=%d Stop" % uobj.mid)
+            #sys.stdout = WFP("worker", self.s2m, uobj.mid)
+            #sys.stderr = WFP("error", self.s2m, uobj.mid)
+            print("Process mid=%d bg" % uobj.mid)
+            work(self.cfg, uobj)
+            print("Process mid=%d ed" % uobj.mid)
+            #try:
+            #    work(self.cfg, uobj)
+            #except:
+            #    t, l, tb = sys.exc_info()
+            #    msg = "".join(traceback.format_exception(t, l, tb))
+            #    print("Process mid=%d Fail\n%s" % (uobj.mid, msg))
+            #else:
+            #    print("Process mid=%d Stop" % uobj.mid)
 
 
 class Manager(Process):
@@ -121,12 +126,12 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
                 sys.stderr.write("\n")
 
     def handle_mid(self, mid, dat):
-        print(dat)
-        if dat.startswith("Process "):
-            dd = dat.split()
-            act = dd[2].lower()
-            print("mid=%s, act=%s" % (mid, act))
-            set_flag(mid, act)
-        elif dat.startswith("Downloading "):
-            print("mid=[%s]" % mid)
-            update_filename(mid, dat[12:-5])
+        print("handle_mid", dat)
+        #if dat.startswith("Process "):
+        #    dd = dat.split()
+        #    act = dd[2].lower()
+        #    print("mid=%s, act=%s" % (mid, act))
+        #    set_flag(mid, act)
+        #elif dat.startswith("Downloading "):
+        #    print("mid=[%s]" % mid)
+        #    update_filename(mid, dat[12:-5])

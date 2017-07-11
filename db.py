@@ -59,6 +59,12 @@ def add_one_url(url, title=""):
         c.execute("insert into aviurl (url, name, updt, flag) "
                   "values (?, ?, datetime('now', 'localtime'), ?)",
                   (url, title, STOP))
+        return c.lastrowid
+
+
+def del_one_url(mid):
+    with SDB() as c:
+        c.execute("delete from aviurl where rowid=?", mid)
 
 
 def query_select(q, p=()):

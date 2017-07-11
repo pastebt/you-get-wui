@@ -12,7 +12,8 @@ from bottle import static_file
 
 from dwn import Manager
 from db import init_db, set_flag
-from db import pick_url, add_one_url, query_urls
+from db import pick_url, query_urls
+from db import add_one_url, del_one_url
 
 
 def html_head():
@@ -39,7 +40,8 @@ def html_form():
             <tr><td>TITLE:</td>
                 <td><input name="avitil" type="text" size=60 /></td>
             </tr>
-            <tr><td> </td><td><input value="Submit" type="submit" /></td>
+            <tr><td> </td><td><input value="Submit" type="submit" name="sub"/>
+                     <input value="Start" type="submit" name="sub"/></td>
             </tr>
         </table>
         </form>
@@ -56,6 +58,7 @@ def html_list():
             <td>add date</td>
             <td>url</td>
             <td>flag</td>
+            <td>del</td>
         <tr></thead>
         <tbody>
         %for url in urls:
@@ -78,6 +81,7 @@ def html_list():
 """                  """FF\\\\
                     %end
 """          """</td>
+                <td><a href=/rest?mid={{url.mid}}&act=del>del</a></td>
             </tr>
         %end
         </tbody>
@@ -88,6 +92,11 @@ def html_list():
 
 def conv(src):
     return [ord(x) for x in src]
+
+
+def start_one(mid):
+    set_flag(mid, "wait")
+    s2m.put({"who": "svr", "mid": mid})
 
 
 @route('/movies/<mid>')
@@ -103,8 +112,11 @@ def rest():
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
-        set_flag(mid, "wait")
-        s2m.put({"who": "svr", "mid": mid})
+        #set_flag(mid, "wait")
+        #s2m.put({"who": "svr", "mid": mid})
+        start_one(mid)
+    elif act == 'del':
+        del_one_url(mid)
     redirect("/")
 
 
@@ -115,11 +127,18 @@ def index():
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
+    sub = request.forms.get('sub')
+    print("sub =", sub)
     aviurl = request.forms.get('aviurl')
     rtitle = request.forms.get('avitil')
     avitil = bytearray(conv(rtitle)).decode("utf8")
 
-    add_one_url(aviurl, avitil)
+    i = add_one_url(aviurl, avitil)
+    print("i =", i)
+    if sub == 'Start':
+        #set_flag(mid, "wait")
+        #s2m.put({"who": "svr", "mid": mid})
+        start_one(i)
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
     return html_head() + body + html_form() + html_list() + html_foot()
