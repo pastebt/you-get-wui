@@ -153,7 +153,7 @@ if __name__ == '__main__':
     cfg.read(cfgfn)
 
     init_db(cfg)
-    mon = Manager()
+    mon = Manager(cfg)
     s2m = mon.s2m
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))

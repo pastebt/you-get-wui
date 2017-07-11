@@ -8,7 +8,7 @@ from multiprocessing import Pipe, Queue, Process
 from subprocess import Popen, STDOUT, PIPE
 
 
-from db import WORK, WAIT, STOP
+from db import WORK, WAIT, STOP, DONE, FAIL
 from db import pick_url, update_filename, set_flag, get_by_flag
 
 
@@ -30,17 +30,20 @@ class WFP(object):
 
 
 def work(cfg, uobj):
-    for sect in cf.sections():
+    for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
         dn = cfg[sect]['dir']
-        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OURDIR='./')
+        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR='./')
         p = Popen("cd %s && %s" % (dn, cmd), shell=True) #, stderr=STDOUT, stdout=PIPE)
         #for l in p.read():
         #    print(l, end="")
         p.wait()
         if p.returncode == 0:
+            set_flag(uobj.mid, DONE)
             break
+    else:
+        set_flag(uobj.mid, FAIL)
 
 
 class Worker(Process):

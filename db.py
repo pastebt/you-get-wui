@@ -72,7 +72,8 @@ def query_select(q, p=()):
 
 
 def query_urls():
-    return query_select("select rowid as mid, * from aviurl")
+    return query_select("select rowid as mid, * from aviurl "
+                        "order by updt desc")
 
 
 def pick_url(mid=0):
@@ -94,8 +95,8 @@ def get_by_flag(f):
 def set_flag(mid, act):
     fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
     with SDB() as c:
-        c.execute("update aviurl set flag=? where rowid=? and flag not in (?, ?)",
-                  (fm.get(act, act), mid, fm['start'], fm['stop']))
+        c.execute("update aviurl set flag=? where rowid=?",
+                  (fm.get(act, act), mid))
 
 
 def update_filename(mid, fn):
