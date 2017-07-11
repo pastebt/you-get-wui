@@ -62,7 +62,7 @@ def html_list():
             <tr>
                 <td>{{url.name}}</td>
                 <td>{{url.updt}}</td>
-                <td>{{url.url}}</td>
+                <td><a href={{url.url}}>{{url.url}}</a></td>
                 <td>\\\\
                     %if url.flag is None or url.flag == STOP:
 """                  """<a href=/rest?mid={{url.mid}}&act=start>start</a>\\\\
