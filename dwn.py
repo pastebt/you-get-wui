@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import os
+import re
 import sys
 import select
 import traceback
@@ -70,15 +71,31 @@ class WFP(object):
         pass
 
 
+def find_title(til, line):
+    for t in til.split("\n"):
+        m = re.match(t.strip(), line)
+        if m:
+            return m.group(1)
+    return None
+
+
 def work(cfg, uobj):
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
         dn = cfg[sect]['dir']
+        til = cfg[sect]['til']
         cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR='./')
-        p = Popen("cd %s && %s" % (dn, cmd), shell=True) #, stderr=STDOUT, stdout=PIPE)
-        #for l in p.read():
-        #    print(l, end="")
+        cmd = "cd %s && %s" % (dn, cmd)
+        print("cmd =", cmd)
+        print("til =", til)
+        p = Popen(cmd, shell=True, bufsize=1, universal_newlines=True, stdout=PIPE)
+        for l in p.stdout:
+            print(l, end="")
+            t = find_title(til, l)
+            if t:
+                print("got title:", t)
+                update_filename(uobj.mid, dn, t)
         p.wait()
         print(sect, p.returncode)
         if p.returncode == 0:

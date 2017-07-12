@@ -88,8 +88,11 @@ def start_one(mid):
 @route('/movies/<mid>')
 def server_static(mid):
     uobj = pick_url(mid)
-    if uobj:
-        return static_file(uobj.path, root='../')
+    if uobj and uobj.path:
+        #return static_file(uobj.path, root='../')
+        return static_file(os.path.basename(uobj.path),
+                           root=os.path.dirname(uobj.path),
+                           download=True)
 
 
 @get('/rest')
@@ -97,10 +100,8 @@ def rest():
     mid = request.query.mid
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
-    print("rest: pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
+    #print("rest: pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     if act in ("start",):
-        #set_flag(mid, "wait")
-        #s2m.put({"who": "svr", "mid": mid})
         start_one(mid)
     elif act == 'del':
         del_one_url(mid)
@@ -122,10 +123,8 @@ def do_post():
 
     i = add_one_url(aviurl, avitil)
     print("i =", i)
-    print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
+    #print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     if sub == 'Start':
-        #set_flag(i, "wait")
-        #s2m.put({"who": "svr", "mid": i})
         start_one(i)
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
@@ -162,7 +161,6 @@ if __name__ == '__main__':
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
-    print("pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()

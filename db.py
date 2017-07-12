@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import os
 import sys
 import sqlite3
 
@@ -127,15 +128,17 @@ def set_flag(mid, act):
                   (fm.get(act, act), mid))
 
 
-def update_filename(mid, fn):
+def update_filename(mid, dn, fn):
+    b = os.path.basename(fn)
+    p = os.path.join(dn, fn)
     with SDB() as c:
-        urls = c.execute("update aviurl set path=? where rowid=?",
-                         (fn, mid))
+        urls = c.execute("update aviurl set name=?, path=? where rowid=?",
+                         (b, p, mid))
 
 
 def dump_urls():
     for uobj in query_urls():
-        print(uobj.name, "\n", uobj.url, "\n")
+        print(uobj.name, "\n", uobj.url, "\n", uobj.path, "\n")
 
 
 def usage():
