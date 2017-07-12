@@ -143,8 +143,8 @@ def do_post():
     i = add_one_url(aviurl, avitil)
     print("i =", i)
     if sub == 'Start':
-        #set_flag(mid, "wait")
-        #s2m.put({"who": "svr", "mid": mid})
+        #set_flag(i, "wait")
+        #s2m.put({"who": "svr", "mid": i})
         start_one(i)
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
