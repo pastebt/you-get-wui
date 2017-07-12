@@ -111,6 +111,12 @@ def update_filename(mid, fn):
                          (fn, mid))
 
 
+def short_it(src, size=30):
+    if len(src) + 3 <= size:
+        return src
+    return src[:size - 3] + '...'
+
+
 def dump_urls():
     for uobj in query_urls():
         print(uobj.name, "\n", uobj.url, "\n")

@@ -17,9 +17,6 @@ from db import pick_url, query_urls
 from db import add_one_url, del_one_url
 
 
-s2m = None
-
-
 def html_head():
     return """
         <html>
@@ -52,16 +49,9 @@ def html_form():
         """
 
 
-def short_it(src, size=30):
-    if len(src) + 3 <= size:
-        return src
-    return src[:size - 3] + '...'
-
-
 def html_list():
     return template("""
-        <% from db import STOP, WAIT, WORK, FAIL, DONE %>
-        <% from svr import short_it %>
+        <% from db import STOP, WAIT, WORK, FAIL, DONE, short_it %>
         %if urls:
         <table border=1 width="95%">
         <thead><tr>
@@ -106,7 +96,6 @@ def conv(src):
 
 
 def start_one(mid):
-    global s2m
     set_flag(mid, "wait")
     s2m.put({"who": "svr", "mid": mid})
 
@@ -120,8 +109,6 @@ def server_static(mid):
 
 @get('/rest')
 def rest():
-    global s2m
-
     mid = request.query.mid
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
@@ -142,7 +129,6 @@ def index():
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
-    global s2m
     sub = request.forms.get('sub')
     print("sub =", sub)
     aviurl = request.forms.get('aviurl')
@@ -179,9 +165,7 @@ def usage():
     sys.exit(1)
 
 
-def main():
-    global s2m
-
+if __name__ == '__main__':
     if len(sys.argv) not in (2, 3) or sys.argv[1] != '-c':
         usage()
     cfgfn = "wui.cfg"
@@ -189,7 +173,7 @@ def main():
         cfgfn = sys.argv[2]
     cfg = configparser.ConfigParser()
     cfg.read(cfgfn)
-
+    
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
@@ -197,7 +181,3 @@ def main():
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()
-
-
-if __name__ == '__main__':
-    main()
