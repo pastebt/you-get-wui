@@ -106,6 +106,7 @@ def conv(src):
 
 
 def start_one(mid):
+    global s2m
     set_flag(mid, "wait")
     s2m.put({"who": "svr", "mid": mid})
 
@@ -124,7 +125,7 @@ def rest():
     mid = request.query.mid
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
-    print("rest: pid=%s, s2m=" % (os.getpid()))
+    print("rest: pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     if act in ("start",):
         #set_flag(mid, "wait")
         #s2m.put({"who": "svr", "mid": mid})
@@ -141,6 +142,7 @@ def index():
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
+    global s2m
     sub = request.forms.get('sub')
     print("sub =", sub)
     aviurl = request.forms.get('aviurl')
