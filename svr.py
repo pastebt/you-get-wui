@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import os
 import sys
 import configparser
 from wsgiref.simple_server import WSGIServer
@@ -14,6 +15,9 @@ from dwn import Manager
 from db import init_db, set_flag
 from db import pick_url, query_urls
 from db import add_one_url, del_one_url
+
+
+s2m = None
 
 
 def html_head():
@@ -115,9 +119,12 @@ def server_static(mid):
 
 @get('/rest')
 def rest():
+    global s2m
+
     mid = request.query.mid
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
+    print("rest: pid=%s, s2m=" % (os.getpid()))
     if act in ("start",):
         #set_flag(mid, "wait")
         #s2m.put({"who": "svr", "mid": mid})
@@ -142,6 +149,7 @@ def do_post():
 
     i = add_one_url(aviurl, avitil)
     print("i =", i)
+    print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     if sub == 'Start':
         #set_flag(i, "wait")
         #s2m.put({"who": "svr", "mid": i})
@@ -169,7 +177,9 @@ def usage():
     sys.exit(1)
 
 
-if __name__ == '__main__':
+def main():
+    global s2m
+
     if len(sys.argv) not in (2, 3) or sys.argv[1] != '-c':
         usage()
     cfgfn = "wui.cfg"
@@ -181,6 +191,11 @@ if __name__ == '__main__':
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
+    print("pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()
+
+
+if __name__ == '__main__':
+    main()
