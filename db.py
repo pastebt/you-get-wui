@@ -64,7 +64,7 @@ def add_one_url(url, title=""):
 
 def del_one_url(mid):
     with SDB() as c:
-        c.execute("delete from aviurl where rowid=?", mid)
+        c.execute("delete from aviurl where rowid=?", (mid,))
 
 
 def query_select(q, p=()):

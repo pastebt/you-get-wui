@@ -48,11 +48,18 @@ def html_form():
         """
 
 
+def short_it(src, size=30):
+    if len(src) + 3 <= size:
+        return src
+    return src[:size - 3] + '...'
+
+
 def html_list():
     return template("""
         <% from db import STOP, WAIT, WORK, FAIL, DONE %>
+        <% from svr import short_it %>
         %if urls:
-        <table border=1>
+        <table border=1 width="95%">
         <thead><tr>
             <td>Title</td>
             <td>add date</td>
@@ -63,9 +70,9 @@ def html_list():
         <tbody>
         %for url in urls:
             <tr>
-                <td>{{url.name}}</td>
-                <td>{{url.updt}}</td>
-                <td><a href={{url.url}}>{{url.url}}</a></td>
+                <td> {{url.name}} </td>
+                <td> {{url.updt}} </td>
+                <td> <a href={{url.url}}>{{short_it(url.url)}}</a> </td>
                 <td>\\\\
                     %if url.flag is None or url.flag == STOP:
 """                  """<a href=/rest?mid={{url.mid}}&act=start>start</a>\\\\
