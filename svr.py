@@ -51,7 +51,6 @@ def html_form():
 
 def html_list():
     return template("""
-        <% from db import STOP, WAIT, WORK, FAIL, DONE, short_it %>
         %if urls:
         <table border=1 width="95%">
         <thead><tr>
@@ -66,23 +65,9 @@ def html_list():
             <tr>
                 <td> {{url.name}} </td>
                 <td> {{url.updt}} </td>
-                <td> <a href={{url.url}}>{{short_it(url.url)}}</a> </td>
-                <td>\\\\
-                    %if url.flag is None or url.flag == STOP:
-"""                  """<a href=/rest?mid={{url.mid}}&act=start>start</a>\\\\
-                    %elif url.flag == WAIT:
-"""                  """<a href=/rest?mid={{url.mid}}&act=start>waiting</a>\\\\
-                    %elif url.flag == WORK:
-"""                  """<a href=/rest?mid={{url.mid}}&act=start>working</a>\\\\
-                    %elif url.flag == FAIL:
-"""                  """<a href=/rest?mid={{url.mid}}&act=start>retry</a>\\\\
-                    %elif url.flag == DONE:
-"""                  """<a href=/movies/{{url.mid}}>Done</a>\\\\
-                    %else:
-"""                  """FF\\\\
-                    %end
-"""          """</td>
-                <td><a href=/rest?mid={{url.mid}}&act=del>del</a></td>
+                <td> <a href={{url.url}}>{{url._short_url}}</a> </td>
+                <td> {{!url._flag_html}} </td>
+                <td> <a href=/rest?mid={{url.mid}}&act=del>del</a> </td>
             </tr>
         %end
         </tbody>

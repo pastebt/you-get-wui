@@ -77,9 +77,31 @@ def query_select(q, p=()):
     return ret
 
 
+def short_it(src, size=30):
+    if len(src) + 3 <= size:
+        return src
+    return src[:size - 3] + '...'
+
+
 def query_urls():
-    return query_select("select rowid as mid, * from aviurl "
+    urls = query_select("select rowid as mid, * from aviurl "
                         "order by updt desc")
+    for uo in urls:
+        setattr(uo, '_short_url', short_it(uo.url))
+        fh = "FF"
+        fl = uo.flag
+        if fl is None or fl == STOP:
+            fh = "<a href=/rest?mid=%d&act=start>start</a>" % uo.mid
+        elif fl == WAIT:
+            fh = "<a href=/rest?mid=%d&act=start>waiting</a>" % uo.mid
+        elif fl == WORK:
+            fh = "<a href=/rest?mid=%d&act=start>working</a>" % uo.mid
+        elif fl == FAIL:
+            fh = "<a href=/rest?mid=%d&act=start>retry</a>" % uo.mid
+        elif fl == DONE:
+            fh = "<a href=/movies/%d>Done</a>" % uo.mid
+        setattr(uo, '_flag_html', fh)
+    return urls
 
 
 def pick_url(mid=0):
@@ -109,12 +131,6 @@ def update_filename(mid, fn):
     with SDB() as c:
         urls = c.execute("update aviurl set path=? where rowid=?",
                          (fn, mid))
-
-
-def short_it(src, size=30):
-    if len(src) + 3 <= size:
-        return src
-    return src[:size - 3] + '...'
 
 
 def dump_urls():
