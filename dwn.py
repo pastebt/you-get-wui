@@ -80,6 +80,7 @@ def find_title(til, line):
 
 
 def work(cfg, uobj):
+    set_flag(uobj.mid, WORK)
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
@@ -89,7 +90,8 @@ def work(cfg, uobj):
         cmd = "cd %s && %s" % (dn, cmd)
         print("cmd =", cmd)
         print("til =", til)
-        p = Popen(cmd, shell=True, bufsize=1, universal_newlines=True, stdout=PIPE)
+        p = Popen(cmd, shell=True, bufsize=1,
+                  universal_newlines=True, stdout=PIPE)
         for l in p.stdout:
             print(l, end="")
             t = find_title(til, l)
