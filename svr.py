@@ -41,8 +41,12 @@ def html_form():
             <tr><td>TITLE:</td>
                 <td><input name="avitil" type="text" size=60 /></td>
             </tr>
-            <tr><td> </td><td><input value="Submit" type="submit" name="sub"/>
-                     <input value="Start" type="submit" name="sub"/></td>
+            <tr><td>DEST:</td>
+                <td><input name="dest" type="text" size=60 /></td>
+            </tr>
+            <tr><td> </td>
+                <td><input value="Submit" type="submit" name="sub"/>
+                    <input value="Start" type="submit" name="sub"/></td>
             </tr>
         </table>
         </form>
@@ -53,7 +57,7 @@ def html_list():
     return template("""
         %if urls:
         <table border=1 width="95%">
-        <thead><tr>
+        <thead><tr align="center">
             <td>Title</td>
             <td>add date</td>
             <td>url</td>
