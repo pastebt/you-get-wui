@@ -70,9 +70,9 @@ def html_list():
             <tr>
                 <td> {{url.name}} </td>
                 <td> {{url.updt}} </td>
-                <td> <a href={{url.url}}>{{url._short_url}}</a> </td>
-                <td> {{!url._flag_html}} </td>
-                <td> <a href=/rest?mid={{url.mid}}&act=del>del</a> </td>
+                <td> <a href="{{url.url}}">{{url._short_url}}</a> </td>
+                <td> <a href="{{url._flag_html}}">{{url._flag_name}}</a> </td>
+                <td> <a href="/rest?mid={{url.mid}}&amp;act=del">del</a> </td>
             </tr>
         %end
         </tbody>

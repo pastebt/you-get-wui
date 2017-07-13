@@ -101,17 +101,20 @@ def query_urls():
         setattr(uo, '_short_url', short_it(uo.url))
         fh = "FF"
         fl = uo.flag
+        lnk = "/rest?mid=%d&act=start" % uo.mid
         if fl is None or fl == STOP:
-            fh = "<a href=/rest?mid=%d&act=start>start</a>" % uo.mid
+            fh = 'start'
         elif fl == WAIT:
-            fh = "<a href=/rest?mid=%d&act=start>waiting</a>" % uo.mid
+            fh = 'waiting'
         elif fl == WORK:
-            fh = "<a href=/rest?mid=%d&act=start>working</a>" % uo.mid
+            fh = 'working'
         elif fl == FAIL:
-            fh = "<a href=/rest?mid=%d&act=start>retry</a>" % uo.mid
+            fh = 'retry'
         elif fl == DONE:
-            fh = "<a href=/movies/%d>Done</a>" % uo.mid
-        setattr(uo, '_flag_html', fh)
+            lnk = '/movies/%d' % uo.mid
+            fh = 'Done'
+        setattr(uo, '_flag_html', lnk)
+        setattr(uo, '_flag_name', fh)
     return urls
 
 
