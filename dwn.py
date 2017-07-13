@@ -84,7 +84,9 @@ def work(cfg, uobj):
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
-        out = uobj.opts.get("dest", './')
+        out = uobj.opts.get("dest")
+        if not out:
+            out = './'
         dn = cfg[sect]['dir']
         til = cfg[sect]['til']
         cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR=out)
