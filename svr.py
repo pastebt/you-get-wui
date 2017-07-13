@@ -3,6 +3,7 @@
 import os
 import sys
 import configparser
+from urllib.parse import quote
 from wsgiref.simple_server import WSGIServer
 from socketserver import ForkingMixIn, ThreadingMixIn
 
@@ -96,7 +97,8 @@ def server_static(mid):
         #return static_file(uobj.path, root='../')
         return static_file(os.path.basename(uobj.path),
                            root=os.path.dirname(uobj.path),
-                           download=True)
+                           download=quote(os.path.basename(uobj.path)))
+                           #download=True)
 
 
 @get('/rest')
@@ -115,6 +117,7 @@ def rest():
 @get('/<:re:.*>')
 def index():
     return html_head() + html_form() + html_list() + html_foot()
+
 
 def req_str(name):
     return bytearray(conv(request.forms.get(name))).decode("utf8")
