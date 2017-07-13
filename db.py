@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import sqlite3
 
 
@@ -33,7 +34,7 @@ def init_db(cfg):
             url text,           -- movie url
             name text,          -- movie name
             mime text,          -- mime from remote
-            opts text,          -- options for download, json
+            opts text,          -- options for download, json dict
             errs text,          -- errors during download, logexc
             size bigint,        -- movie file size
             path text,          -- movie local file path
@@ -50,16 +51,22 @@ class UOBJ(object):
     def __init__(self, dats=[]):
         for dat in dats:
             setattr(self, dat[0], dat[1])
+        if hasattr(self, "opts"):
+            if self.opts:
+                self.opts = json.loads(self.opts)
+            else:
+                self.opts = {}
 
     def __str__(self):
         return str(self.__dict__)
 
 
-def add_one_url(url, title=""):
+def add_one_url(url, title="", dest=""):
+    opts = json.dumps({"dest": dest})
     with SDB() as c:
-        c.execute("insert into aviurl (url, name, updt, flag) "
-                  "values (?, ?, datetime('now', 'localtime'), ?)",
-                  (url, title, STOP))
+        c.execute("insert into aviurl (url, name, updt, opts, flag) "
+                  "values (?, ?, datetime('now', 'localtime'), ?, ?)",
+                  (url, title, opts, STOP))
         return c.lastrowid
 
 

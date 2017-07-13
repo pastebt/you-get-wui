@@ -84,12 +84,13 @@ def work(cfg, uobj):
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
+        out = uobj.opts.get("dest", './')
         dn = cfg[sect]['dir']
         til = cfg[sect]['til']
-        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR='./')
+        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR=out)
         cmd = "cd %s && %s" % (dn, cmd)
         print("cmd =", cmd)
-        print("til =", til)
+        #print("til =", til)
         p = Popen(cmd, shell=True, bufsize=1,
                   universal_newlines=True, stdout=PIPE)
         for l in p.stdout:
@@ -97,7 +98,8 @@ def work(cfg, uobj):
             t = find_title(til, l)
             if t:
                 print("got title:", t)
-                update_filename(uobj.mid, dn, t)
+                update_filename(uobj.mid, os.path.join(dn, out),
+                                os.path.basename(t))
         p.wait()
         print(sect, p.returncode)
         if p.returncode == 0:

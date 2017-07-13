@@ -42,7 +42,7 @@ def html_form():
                 <td><input name="avitil" type="text" size=60 /></td>
             </tr>
             <tr><td>DEST:</td>
-                <td><input name="dest" type="text" size=60 /></td>
+                <td><input name="destdn" type="text" size=60 /></td>
             </tr>
             <tr><td> </td>
                 <td><input value="Submit" type="submit" name="sub"/>
@@ -116,17 +116,24 @@ def rest():
 def index():
     return html_head() + html_form() + html_list() + html_foot()
 
+def req_str(name):
+    return bytearray(conv(request.forms.get(name))).decode("utf8")
+
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
     sub = request.forms.get('sub')
     print("sub =", sub)
     aviurl = request.forms.get('aviurl')
-    rtitle = request.forms.get('avitil')
-    avitil = bytearray(conv(rtitle)).decode("utf8")
-
-    i = add_one_url(aviurl, avitil)
-    print("i =", i)
+    #rtitle = request.forms.get('avitil')
+    #print("rtitle =", rtitle.decode("utf8"))
+    #destdn = request.forms.get('destdn')
+    #avitil = bytearray(conv(rtitle)).decode("utf8")
+    destdn = req_str('destdn')
+    avitil = req_str('avitil')
+    
+    i = add_one_url(aviurl, avitil, destdn)
+    print("i =", i, "destdn =", destdn)
     #print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
     if sub == 'Start':
         start_one(i)
