@@ -71,8 +71,8 @@ class WFP(object):
         pass
 
 
-def find_title(til, line):
-    for t in til.split("\n"):
+def find_til(til, line):
+    for t in til.strip().split("\n"):
         m = re.match(t.strip(), line)
         if m:
             return m.group(1)
@@ -87,21 +87,30 @@ def work(cfg, uobj):
         out = uobj.opts.get("dest")
         if not out:
             out = './'
-        dn = cfg[sect]['dir']
+        dn  = cfg[sect]['dir']
         til = cfg[sect]['til']
+        per = cfg[sect]['per']
         cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR=out)
         cmd = "cd %s && %s" % (dn, cmd)
         print("cmd =", cmd)
         #print("til =", til)
+
         p = Popen(cmd, shell=True, bufsize=1,
-                  universal_newlines=True, stdout=PIPE)
+                  universal_newlines=True, stdout=PIPE, stderr=STDOUT)
+
         for l in p.stdout:
-            print(l, end="")
-            t = find_title(til, l)
+            e = "\n"
+            t = find_til(til, l)
             if t:
                 print("got title:", t)
                 update_filename(uobj.mid, os.path.join(dn, out),
                                 os.path.basename(t))
+            else:
+                f = find_til(per, l)
+                if f:
+                    e = "\r"
+            print(l.rstrip(), end=e)
+
         p.wait()
         print(sect, p.returncode)
         if p.returncode == 0:
