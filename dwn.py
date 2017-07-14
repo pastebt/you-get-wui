@@ -79,7 +79,7 @@ def find_til(til, line):
     return None
 
 
-def work(cfg, uobj):
+def work(cfg, uobj, w2s):
     set_flag(uobj.mid, WORK)
     for sect in cfg.sections():
         if not sect.startswith('download_'):
@@ -105,10 +105,12 @@ def work(cfg, uobj):
                 print("got title:", t)
                 update_filename(uobj.mid, os.path.join(dn, out),
                                 os.path.basename(t))
+                w2s.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
             else:
                 f = find_til(per, l)
                 if f:
                     e = "\r"
+                    w2s.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
             print(l.rstrip(), end=e)
 
         p.wait()
@@ -120,12 +122,13 @@ def work(cfg, uobj):
     else:
         print("mid %d failed" % uobj.mid)
         set_flag(uobj.mid, FAIL)
+    w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
 
 
 class Worker(Process):
-    def __init__(self, cfg, s2m, m2w):
+    def __init__(self, cfg, s2m, m2w, w2s):
         Process.__init__(self)
-        self.cfg, self.s2m, self.m2w = cfg, s2m, m2w
+        self.cfg, self.s2m, self.m2w, self.w2s = cfg, s2m, m2w, w2s
 
     def run(self):
         while True:
@@ -135,7 +138,7 @@ class Worker(Process):
             #sys.stdout = WFP("worker", self.s2m, uobj.mid)
             #sys.stderr = WFP("error", self.s2m, uobj.mid)
             print("Process mid=%d bg" % uobj.mid)
-            work(self.cfg, uobj)
+            work(self.cfg, uobj, self.w2s)
             print("Process mid=%d ed" % uobj.mid)
             #try:
             #    work(self.cfg, uobj)
@@ -152,11 +155,12 @@ class Manager(Process):
         Process.__init__(self)
         self.s2m = Queue()  # message Manager receive from worker and svr
         self.m2w = Queue()  # message send to works
+        self.w2s = Queue()  # message send to svr from worker or manager (notice update web page)
         self.cfg = cfg
         wnum = 1    # 3
         self.works = [0] * wnum
         for i in range(wnum):
-            self.works[i] = Worker(self.cfg, self.s2m, self.m2w)
+            self.works[i] = Worker(self.cfg, self.s2m, self.m2w, self.w2s)
             self.works[i].start()
 
     def stop(self):
@@ -190,6 +194,8 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
             elif who == 'svr':
                 #self.m2w.put(msg['mid'])
                 self.m2w.put(pick_url(msg['mid']))
+            elif who == 'clt':
+                self.w2s.put(msg)
             elif who == 'error':
                 sys.stderr.write(msg['dat'])   # FIXME
                 sys.stderr.write("\n")

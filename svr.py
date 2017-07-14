@@ -5,7 +5,9 @@ import sys
 import configparser
 from urllib.parse import quote
 from wsgiref.simple_server import WSGIServer
-from socketserver import ForkingMixIn, ThreadingMixIn
+
+from socketserver import ThreadingMixIn
+#from socketserver import ForkingMixIn
 
 from bottle import WSGIRefServer
 from bottle import get, post, request
@@ -59,11 +61,14 @@ def html_form():
         var request = new XMLHttpRequest();
         request.open('GET', '/list', true);
         request.onload = function() {
+        //alert(request.status);
         if (request.status >= 200 && request.status < 400) {
             // Success!
             //var data = JSON.parse(request.responseText);
             //alert(request.responseText);
             listobj.innerHTML = request.responseText;
+            request.open('GET', '/list', true);
+            request.send()
         } else {
             // We reached our target server, but it returned an error
         }
@@ -162,11 +167,17 @@ def rest():
 
 @get('/list')
 def list():
+    try:
+        w2s.get(timeout=10)
+        print("got from w2s")
+    except Exception as e:
+        print(e)
     return html_list()
 
 
 @get('/<:re:.*>')
 def index():
+    s2m.put({"who": "clt"})
     #return html_head() + html_form() + html_list() + html_foot()
     return html_head() + html_form() + html_foot()
 
@@ -194,6 +205,7 @@ def do_post():
         start_one(i)
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
+    s2m.put({"who": "clt"})
     #return html_head() + body + html_form() + html_list() + html_foot()
     return html_head() + body + html_form() + html_foot()
 
@@ -207,6 +219,16 @@ class MySvr(WSGIRefServer):
     def __init__(self, host='', port=8080, **options):
         options['server_class'] = FWSGISvr
         WSGIRefServer.__init__(self, host, port, **options)
+
+
+def notice_all():
+    while True:
+        try:
+            w2s.get(timeout=10)
+        except Exception as e:
+            print(e)
+        print("send notice to all")
+        cdn.notify_all()
 
 
 def usage():
@@ -228,6 +250,7 @@ if __name__ == '__main__':
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
+    w2s = mon.w2s
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()
