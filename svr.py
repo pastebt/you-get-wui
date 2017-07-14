@@ -51,6 +51,31 @@ def html_form():
             </tr>
         </table>
         </form>
+        <div id="url_list"></div>
+
+        <script>
+        var listobj = document.getElementById('url_list');
+        //alert(listobj);
+        var request = new XMLHttpRequest();
+        request.open('GET', '/list', true);
+        request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+            // Success!
+            //var data = JSON.parse(request.responseText);
+            //alert(request.responseText);
+            listobj.innerHTML = request.responseText;
+        } else {
+            // We reached our target server, but it returned an error
+        }
+        };
+
+        request.onerror = function() {
+            // There was a connection error of some sort
+        };
+
+        request.send();
+        </script>
+
         """
 
 
@@ -81,6 +106,16 @@ def html_list():
         """, urls=query_urls())
 
 
+def html_play(mid):
+    return template("""
+        <video src="/play/{{mid}}" controls>
+        <p>Your browser doesn't support HTML5 video.
+           Here is a <a href="/play/{{mid}}">link to the video</a> instead.</p> 
+        </video>
+        """, mid=mid)
+
+
+
 def conv(src):
     return [ord(x) for x in src]
 
@@ -88,6 +123,14 @@ def conv(src):
 def start_one(mid):
     set_flag(mid, "wait")
     s2m.put({"who": "svr", "mid": mid})
+
+
+@route('/play/<mid>')
+def server_static(mid):
+    uobj = pick_url(mid)
+    if uobj and uobj.path:
+        return static_file(os.path.basename(uobj.path),
+                           root=os.path.dirname(uobj.path))
 
 
 @route('/movies/<mid>')
@@ -99,6 +142,7 @@ def server_static(mid):
                            root=os.path.dirname(uobj.path),
                            download=quote(os.path.basename(uobj.path)))
                            #download=True)
+        #return html_head() + html_play(uobj) + html_foot()
 
 
 @get('/rest')
@@ -111,12 +155,20 @@ def rest():
         start_one(mid)
     elif act == 'del':
         del_one_url(mid)
+    elif act == 'play':
+        return html_head() + html_play(mid) + html_foot()
     redirect("/")
+
+
+@get('/list')
+def list():
+    return html_list()
 
 
 @get('/<:re:.*>')
 def index():
-    return html_head() + html_form() + html_list() + html_foot()
+    #return html_head() + html_form() + html_list() + html_foot()
+    return html_head() + html_form() + html_foot()
 
 
 def req_str(name):
@@ -142,7 +194,8 @@ def do_post():
         start_one(i)
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
-    return html_head() + body + html_form() + html_list() + html_foot()
+    #return html_head() + body + html_form() + html_list() + html_foot()
+    return html_head() + body + html_form() + html_foot()
 
 
 #class FWSGISvr(ForkingMixIn, WSGIServer):

@@ -111,7 +111,7 @@ def query_urls():
         elif fl == FAIL:
             fh = 'retry'
         elif fl == DONE:
-            lnk = '/movies/%d' % uo.mid
+            lnk = '/rest?mid=%d&act=play' % uo.mid
             fh = 'Done'
         setattr(uo, '_flag_html', lnk)
         setattr(uo, '_flag_name', fh)
