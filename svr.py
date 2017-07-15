@@ -221,14 +221,14 @@ class MySvr(WSGIRefServer):
         WSGIRefServer.__init__(self, host, port, **options)
 
 
-def notice_all():
-    while True:
-        try:
-            w2s.get(timeout=10)
-        except Exception as e:
-            print(e)
-        print("send notice to all")
-        cdn.notify_all()
+#def notice_all():
+#    while True:
+#        try:
+#            w2s.get(timeout=10)
+#        except Exception as e:
+#            print(e)
+#        print("send notice to all")
+#        cdn.notify_all()
 
 
 def usage():
