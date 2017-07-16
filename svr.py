@@ -111,9 +111,29 @@ def html_list():
         """, urls=query_urls())
 
 
+def html_play_head():
+    return """
+        <html>
+        <head><title>You_Get</title>
+        <style>
+        .center {
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
+        </style>
+        </head>
+        <body style="background-color: rgb(0,0,0);">
+        """
+
+
 def html_play(mid):
     return template("""
-        <video src="/play/{{mid}}" controls>
+        <!-- video src="/play/{{mid}}" controls autoplay name="media" style="display: block; margin: auto;" -->
+        <video src="/play/{{mid}}" controls autoplay class="center">
         <p>Your browser doesn't support HTML5 video.
            Here is a <a href="/play/{{mid}}">link to the video</a> instead.</p> 
         </video>
@@ -161,7 +181,7 @@ def rest():
     elif act == 'del':
         del_one_url(mid)
     elif act == 'play':
-        return html_head() + html_play(mid) + html_foot()
+        return html_play_head() + html_play(mid) + html_foot()
     redirect("/")
 
 
