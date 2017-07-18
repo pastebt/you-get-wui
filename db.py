@@ -95,6 +95,7 @@ def short_it(src, size=30):
 
 
 def query_urls():
+    ww = 0
     urls = query_select("select rowid as mid, * from aviurl "
                         "order by updt desc")
     for uo in urls:
@@ -106,8 +107,10 @@ def query_urls():
             fh = 'start'
         elif fl == WAIT:
             fh = 'waiting'
+            ww = 1
         elif fl == WORK:
             fh = 'working'
+            ww = 1
         elif fl == FAIL:
             fh = 'retry'
         elif fl == DONE:
@@ -115,7 +118,7 @@ def query_urls():
             fh = 'Done'
         setattr(uo, '_flag_html', lnk)
         setattr(uo, '_flag_name', fh)
-    return urls
+    return urls, ww
 
 
 def pick_url(mid=0):

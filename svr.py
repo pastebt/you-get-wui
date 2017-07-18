@@ -67,8 +67,12 @@ def html_form():
             //var data = JSON.parse(request.responseText);
             //alert(request.responseText);
             listobj.innerHTML = request.responseText;
-            request.open('GET', '/list', true);
-            request.send()
+            var ww = document.getElementById('urls_tb').getAttribute("ww");
+            if (ww == 1) {
+                //alert(ww)
+                request.open('GET', '/list', true);
+                request.send()
+            }
         } else {
             // We reached our target server, but it returned an error
         }
@@ -80,17 +84,18 @@ def html_form():
 
         request.send();
         </script>
-
         """
 
 
 def html_list():
+    urls, ww = query_urls()
+    print("ww =", ww)
     return template("""
         %if urls:
-        <table border=1 width="95%">
+        <table border=1 width="95%" id="urls_tb", ww={{ww}}>
         <thead><tr align="center">
             <td>Title</td>
-            <td>add date</td>
+            <!-- td>add date</td -->
             <td>url</td>
             <td>flag</td>
             <td>del</td>
@@ -98,9 +103,9 @@ def html_list():
         <tbody>
         %for url in urls:
             <tr>
-                <td> {{url.name}} </td>
-                <td> {{url.updt}} </td>
-                <td> <a href="{{url.url}}">{{url._short_url}}</a> </td>
+                <td> <a title="{{url.updt}}">{{url.name}}</a> </td>
+                <!-- td> {{url.updt}} </td -->
+                <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
                 <td> <a href="{{url._flag_html}}">{{url._flag_name}}</a> </td>
                 <td> <a href="/rest?mid={{url.mid}}&amp;act=del">del</a> </td>
             </tr>
@@ -108,7 +113,7 @@ def html_list():
         </tbody>
         </table>
         %end
-        """, urls=query_urls())
+        """, urls=urls, ww=ww)
 
 
 def html_play(mid):
