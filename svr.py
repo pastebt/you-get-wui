@@ -44,8 +44,11 @@ def html_form():
             <tr><td>TITLE:</td>
                 <td><input name="avitil" type="text" size=60 /></td>
             </tr>
-            <tr><td>DEST:</td>
+            <tr><td>PATH:</td>
                 <td><input name="destdn" type="text" size=60 /></td>
+            </tr>
+            <tr><td>CPTO:</td>
+                <td><input name="copyto" type="text" size=60 /></td>
             </tr>
             <tr><td> </td>
                 <td><input value="Submit" type="submit" name="sub"/>
@@ -89,7 +92,7 @@ def html_form():
 
 def html_list():
     urls, ww = query_urls()
-    print("ww =", ww)
+    #print("ww =", ww)
     return template("""
         %if urls:
         <table border=1 width="95%" id="urls_tb", ww={{ww}}>
@@ -210,21 +213,24 @@ def req_str(name):
 def do_post():
     sub = request.forms.get('sub')
     print("sub =", sub)
-    aviurl = request.forms.get('aviurl')
-    #rtitle = request.forms.get('avitil')
-    #print("rtitle =", rtitle.decode("utf8"))
-    #destdn = request.forms.get('destdn')
-    #avitil = bytearray(conv(rtitle)).decode("utf8")
-    destdn = req_str('destdn')
+    aviurl = request.forms.get('aviurl').strip()
     avitil = req_str('avitil')
+    destdn = req_str('destdn')
+    copyto = request.forms.get('copyto').strip()
     
-    i = add_one_url(aviurl, avitil, destdn)
-    print("i =", i, "destdn =", destdn)
-    #print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
-    if sub == 'Start':
-        start_one(i)
-    body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
-                    title=avitil, url=aviurl)
+    if len(aviurl) > 4:
+        opt = {'dest': destdn}
+        if copyto:
+            opt['cpto'] = copyto
+        i = add_one_url(aviurl, avitil, opt)
+        print("i =", i, "opts =", opt)
+        #print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
+        if sub == 'Start':
+            start_one(i)
+        body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
+                        title=avitil, url=aviurl)
+    else:
+        body = "Miss URL"
     s2m.put({"who": "clt"})
     #return html_head() + body + html_form() + html_list() + html_foot()
     return html_head() + body + html_form() + html_foot()

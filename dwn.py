@@ -79,6 +79,13 @@ def find_til(til, line):
     return None
 
 
+def nb_put(q, dat):
+    try:
+        q.put_nowait(dat)
+    except Queue.FULL:
+        pass
+
+
 def work(cfg, uobj, w2s):
     set_flag(uobj.mid, WORK)
     for sect in cfg.sections():
@@ -105,12 +112,14 @@ def work(cfg, uobj, w2s):
                 print("got title:", t)
                 update_filename(uobj.mid, os.path.join(dn, out),
                                 os.path.basename(t))
-                w2s.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
+                #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
+                nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "got title"})
             else:
                 f = find_til(per, l)
                 if f:
                     e = "\r"
-                    w2s.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
+                    #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
+                    nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
             print(l.rstrip(), end=e)
 
         p.wait()
@@ -122,7 +131,8 @@ def work(cfg, uobj, w2s):
     else:
         print("mid %d failed" % uobj.mid)
         set_flag(uobj.mid, FAIL)
-    w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
+    #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
+    nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "exit"})
 
 
 class Worker(Process):
@@ -153,9 +163,10 @@ class Worker(Process):
 class Manager(Process):
     def __init__(self, cfg):
         Process.__init__(self)
-        self.s2m = Queue()  # message Manager receive from worker and svr
-        self.m2w = Queue()  # message send to works
-        self.w2s = Queue()  # message send to svr from worker or manager (notice update web page)
+        self.s2m = Queue()      # message Manager receive from worker and svr
+        self.m2w = Queue()      # message send to workers
+        self.w2s = Queue(10)    # message send to svr from worker or manager (notice update web page)
+        #self.t2m = Queue()      # svr thread send to manager, client queue
         self.cfg = cfg
         wnum = 1    # 3
         self.works = [0] * wnum
@@ -195,7 +206,8 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
                 #self.m2w.put(msg['mid'])
                 self.m2w.put(pick_url(msg['mid']))
             elif who == 'clt':
-                self.w2s.put(msg)
+                #self.w2s.put(msg)
+                nb_put(self.w2s, msg)
             elif who == 'error':
                 sys.stderr.write(msg['dat'])   # FIXME
                 sys.stderr.write("\n")

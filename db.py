@@ -61,10 +61,10 @@ class UOBJ(object):
         return str(self.__dict__)
 
 
-def add_one_url(url, title="", dest=""):
-    opts = {}
-    if dest:
-        opts["dest"] = dest
+def add_one_url(url, title="", opts={}):
+    #opts = {}
+    #if dest:
+    #    opts["dest"] = dest
     opts = json.dumps(opts)
     with SDB() as c:
         c.execute("insert into aviurl (url, name, updt, opts, flag) "
