@@ -137,19 +137,20 @@ def get_by_flag(f):
                         (f,))
 
 
-def set_flag(mid, act):
+def set_flag(uobj, act):
     fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
+    uobj.flag = fm.get(act, act)
     with SDB() as c:
         c.execute("update aviurl set flag=? where rowid=?",
-                  (fm.get(act, act), mid))
+                  (uobj.flag, uobj.mid))
 
 
-def update_filename(mid, dn, fn):
-    b = os.path.basename(fn)
-    p = os.path.join(dn, fn)
+def update_filename(uobj, dn, fn):
+    uobj.name = os.path.basename(fn)
+    uobj.path = os.path.join(dn, fn)
     with SDB() as c:
         urls = c.execute("update aviurl set name=?, path=? where rowid=?",
-                         (b, p, mid))
+                         (uobj.name, uobj.path, uobj.mid))
 
 
 def dump_urls():

@@ -5,6 +5,7 @@ import re
 import sys
 import select
 import traceback
+import queue
 from http.client import HTTPConnection
 from subprocess import Popen, STDOUT, PIPE
 from multiprocessing import Pipe, Queue, Process
@@ -82,12 +83,12 @@ def find_til(til, line):
 def nb_put(q, dat):
     try:
         q.put_nowait(dat)
-    except Queue.FULL:
+    except queue.Full:
         pass
 
 
 def work(cfg, uobj, w2s):
-    set_flag(uobj.mid, WORK)
+    set_flag(uobj, WORK)
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
@@ -110,7 +111,7 @@ def work(cfg, uobj, w2s):
             t = find_til(til, l)
             if t:
                 print("got title:", t)
-                update_filename(uobj.mid, os.path.join(dn, out),
+                update_filename(uobj, os.path.join(dn, out),
                                 os.path.basename(t))
                 #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
                 nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "got title"})
@@ -126,13 +127,19 @@ def work(cfg, uobj, w2s):
         print(sect, p.returncode)
         if p.returncode == 0:
             print("mid %d done" % uobj.mid)
-            set_flag(uobj.mid, DONE)
+            set_flag(uobj, DONE)
             break
     else:
         print("mid %d failed" % uobj.mid)
-        set_flag(uobj.mid, FAIL)
+        set_flag(uobj, FAIL)
     #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
     nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "exit"})
+    cpto = uobj.opts.get("cpto")
+    pcmd = cfg['server']['post_cmd']
+    if uobj.flag == DONE and cpto and pcmd:
+        cmd = '%s "%s" "%s"' % (pcmd, cpto, uobj.path)
+        print(cmd)
+        Popen(cmd, shell=True).wait()
 
 
 class Worker(Process):
@@ -191,10 +198,10 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
         # reset DB flags
         kuos = get_by_flag(WORK)
         for uo in kuos:
-            set_flag(uo.mid, STOP)
+            set_flag(uo, STOP)
         tuos = get_by_flag(WAIT)
         for uo in tuos:
-            set_flag(uo.mid, STOP)
+            set_flag(uo, STOP)
 
         while True:
             msg = self.s2m.get()
