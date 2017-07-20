@@ -35,6 +35,15 @@ def html_foot():
 
 
 def html_form():
+    pcmd = cfg['server'].get('post_cmd')
+    if pcmd:
+        cpto = """
+            <tr><td>CPTO:</td>
+                <td><input name="copyto" type="text" size=60 /></td>
+            </tr>"""
+    else:
+        cpto = ""
+
     return """
         <form action="/" method="post">
         <table>
@@ -46,10 +55,7 @@ def html_form():
             </tr>
             <tr><td>PATH:</td>
                 <td><input name="destdn" type="text" size=60 /></td>
-            </tr>
-            <tr><td>CPTO:</td>
-                <td><input name="copyto" type="text" size=60 /></td>
-            </tr>
+            </tr>""" + cpto + """
             <tr><td> </td>
                 <td><input value="Submit" type="submit" name="sub"/>
                     <input value="Start" type="submit" name="sub"/></td>
@@ -271,7 +277,7 @@ if __name__ == '__main__':
         cfgfn = sys.argv[2]
     cfg = configparser.ConfigParser()
     cfg.read(cfgfn)
-    
+
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m

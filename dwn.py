@@ -135,7 +135,7 @@ def work(cfg, uobj, w2s):
     #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
     nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "exit"})
     cpto = uobj.opts.get("cpto")
-    pcmd = cfg['server']['post_cmd']
+    pcmd = cfg['server'].get('post_cmd')
     if uobj.flag == DONE and cpto and pcmd:
         cmd = '%s "%s" "%s"' % (pcmd, cpto, uobj.path)
         print(cmd)
