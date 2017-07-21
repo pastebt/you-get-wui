@@ -4,7 +4,7 @@ import os
 import sys
 import configparser
 from urllib.parse import quote
-from wsgiref.simple_server import WSGIServer
+from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
 from socketserver import ThreadingMixIn
 #from socketserver import ForkingMixIn
@@ -247,9 +247,19 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
     pass
 
 
+class MyHandler(WSGIRequestHandler):
+    def log_message(self, format, *args):
+        pass
+        #sys.stderr.write("%s - - [%s] %s\n" %
+        #             (self.client_address[0],
+        #              self.log_date_time_string(),
+        #              format%args))
+
+
 class MySvr(WSGIRefServer):
     def __init__(self, host='', port=8080, **options):
         options['server_class'] = FWSGISvr
+        options['handler_class'] = MyHandler
         WSGIRefServer.__init__(self, host, port, **options)
 
 
