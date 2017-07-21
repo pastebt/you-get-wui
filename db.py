@@ -139,10 +139,13 @@ def get_by_flag(f):
 
 def set_flag(uobj, act):
     fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
-    uobj.flag = fm.get(act, act)
+    f = fm.get(act, act)
+    i = uobj
+    if isinstance(uobj, UOBJ):
+        i = uobj.mid
+        uobj.flag = f
     with SDB() as c:
-        c.execute("update aviurl set flag=? where rowid=?",
-                  (uobj.flag, uobj.mid))
+        c.execute("update aviurl set flag=? where rowid=?", (f, i))
 
 
 def update_filename(uobj, dn, fn):

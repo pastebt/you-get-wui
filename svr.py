@@ -155,6 +155,7 @@ def conv(src):
 
 
 def start_one(mid):
+    set_flag(mid, 'wait')
     s2m.put({"who": "svr", "mid": mid})
 
 
