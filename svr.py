@@ -25,6 +25,44 @@ def html_head():
         <html>
         <head><title>You_Get</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+        <script>
+        function mid_act(mid, act) {
+            var req = new XMLHttpRequest();
+            req.open('GET', '/rest?mid=' + mid + "&act=" + act, true);
+            req.send();
+            reload_urls_list();
+        }
+
+        function reload_urls_list() {
+            var listobj = document.getElementById('url_list');
+            //alert(listobj);
+            var request = new XMLHttpRequest();
+            request.open('GET', '/list', true);
+            request.onload = function() {
+            //alert(request.status);
+            if (request.status >= 200 && request.status < 400) {
+                // Success!
+                //var data = JSON.parse(request.responseText);
+                //alert(request.responseText);
+                listobj.innerHTML = request.responseText;
+                var ww = document.getElementById('urls_tb').getAttribute("ww");
+                if (ww == 1) {
+                    //alert(ww)
+                    request.open('GET', '/list', true);
+                    request.send()
+                }
+            } else {
+            // We reached our target server, but it returned an error
+            }
+            };
+
+            request.onerror = function() {
+                // There was a connection error of some sort
+            };
+
+            request.send();
+        }
+        </script>
         </head>
         <body>
         """
@@ -63,36 +101,7 @@ def html_form():
         </table>
         </form>
         <div id="url_list"></div>
-
-        <script>
-        var listobj = document.getElementById('url_list');
-        //alert(listobj);
-        var request = new XMLHttpRequest();
-        request.open('GET', '/list', true);
-        request.onload = function() {
-        //alert(request.status);
-        if (request.status >= 200 && request.status < 400) {
-            // Success!
-            //var data = JSON.parse(request.responseText);
-            //alert(request.responseText);
-            listobj.innerHTML = request.responseText;
-            var ww = document.getElementById('urls_tb').getAttribute("ww");
-            if (ww == 1) {
-                //alert(ww)
-                request.open('GET', '/list', true);
-                request.send()
-            }
-        } else {
-            // We reached our target server, but it returned an error
-        }
-        };
-
-        request.onerror = function() {
-            // There was a connection error of some sort
-        };
-
-        request.send();
-        </script>
+        <script>reload_urls_list();</script>
         """
 
 
@@ -101,10 +110,9 @@ def html_list():
     #print("ww =", ww)
     return template("""
         %if urls:
-        <table border=1 width="95%" id="urls_tb", ww={{ww}}>
+        <table border=1 width="95%" id="urls_tb" ww={{ww}}>
         <thead><tr align="center">
             <td>Title</td>
-            <!-- td>add date</td -->
             <td>url</td>
             <td>flag</td>
             <td>del</td>
@@ -112,11 +120,17 @@ def html_list():
         <tbody>
         %for url in urls:
             <tr>
-                <td> <a title="{{url.updt}}">{{url.name}}</a> </td>
-                <!-- td> {{url.updt}} </td -->
+                <td> <a title="{{url.updt}}"
+                %if url._flag_name == "Done":
+                    href="/rest?mid={{url.mid}}&act=play" target='_blank'
+                %end
+                >{{url.name}}</a> </td>
                 <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
-                <td> <a href="{{url._flag_html}}">{{url._flag_name}}</a> </td>
-                <td> <a href="/rest?mid={{url.mid}}&amp;act=del">del</a> </td>
+                <td> <a href="#{{url.mid}}flag" onclick="mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
+                <td>
+                <!-- a href="/rest?mid={{url.mid}}&amp;act=del" -->
+                <a href="#{{url.mid}}del" onclick="mid_act({{url.mid}}, 'del');">
+                del</a> </td>
             </tr>
         %end
         </tbody>
@@ -126,10 +140,12 @@ def html_list():
 
 
 def html_play(mid):
+    uobj = pick_url(mid)
+    name = os.path.basename(uobj.path)
     #controls autoplay style="display: block; margin: auto;"
     return template("""
         <html>
-        <head><title>You_Get_WUI</title>
+        <head><title>{{name}}</title>
         <style>
         .center {
             margin: 0;
@@ -147,7 +163,7 @@ def html_play(mid):
            Here is a <a href="/play/{{mid}}">link to the video</a> instead.</p> 
         </video>
         </body>
-        </html>""", mid=mid)
+        </html>""", name=name, mid=mid)
 
 
 def conv(src):
@@ -191,14 +207,16 @@ def rest():
         del_one_url(mid)
     elif act == 'play':
         return html_play(mid)
-    redirect("/")
+    #redirect("/")
+    s2m.put({"who": "clt"})
+    return ""
 
 
 @get('/list')
 def list():
     try:
         w2s.get(timeout=10)
-        print("got from w2s")
+        #print("got from w2s")
     except Exception as e:
         print(e)
     return html_list()
@@ -212,17 +230,18 @@ def index():
 
 
 def req_str(name):
-    return bytearray(conv(request.forms.get(name))).decode("utf8")
+    return bytearray(conv(request.forms.get(name, ""))).decode("utf8")
 
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
     sub = request.forms.get('sub')
     print("sub =", sub)
-    aviurl = request.forms.get('aviurl').strip()
+    aviurl = request.forms.get('aviurl', "").strip()
     avitil = req_str('avitil')
     destdn = req_str('destdn')
-    copyto = request.forms.get('copyto').strip()
+    copyto = req_str('copyto')
+    #copyto = request.forms.get('copyto', "").strip()
     
     if len(aviurl) > 4:
         opt = {'dest': destdn}
@@ -249,11 +268,11 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        pass
-        #sys.stderr.write("%s - - [%s] %s\n" %
-        #             (self.client_address[0],
-        #              self.log_date_time_string(),
-        #              format%args))
+        #pass
+        sys.stderr.write("%s - - [%s] %s\n" %
+                     (self.client_address[0],
+                      self.log_date_time_string(),
+                      format%args))
 
 
 class MySvr(WSGIRefServer):

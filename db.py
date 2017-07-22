@@ -102,21 +102,22 @@ def query_urls():
         setattr(uo, '_short_url', short_it(uo.url))
         fh = "FF"
         fl = uo.flag
-        lnk = "/rest?mid=%d&act=start" % uo.mid
+        act = "start"
         if fl is None or fl == STOP:
             fh = 'start'
         elif fl == WAIT:
             fh = 'waiting'
+            act = "stop"
             ww = 1
         elif fl == WORK:
             fh = 'working'
+            act = "stop"
             ww = 1
         elif fl == FAIL:
             fh = 'retry'
         elif fl == DONE:
-            lnk = '/rest?mid=%d&act=play' % uo.mid
             fh = 'Done'
-        setattr(uo, '_flag_html', lnk)
+        setattr(uo, '_flag_act', act)
         setattr(uo, '_flag_name', fh)
     return urls, ww
 
@@ -126,7 +127,7 @@ def pick_url(mid=0):
         ret = query_select("select rowid as mid, * from aviurl where rowid=?",
                            (mid,))
     else:
-        ret = qieru_select("select rowid as mid, * from aviurl "
+        ret = query_select("select rowid as mid, * from aviurl "
                            "where flag=? limit 1",
                            (WAIT,))
     return ret[0] if ret else None
