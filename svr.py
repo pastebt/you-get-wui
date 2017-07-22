@@ -25,6 +25,11 @@ def html_head():
         <html>
         <head><title>You_Get</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+        <style>
+        div#url_list tbody tr:hover  {
+            background-color:yellow;
+        }
+        </style>
         <script>
         function mid_act(mid, act) {
             var req = new XMLHttpRequest();
@@ -268,11 +273,11 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        #pass
-        sys.stderr.write("%s - - [%s] %s\n" %
-                     (self.client_address[0],
-                      self.log_date_time_string(),
-                      format%args))
+        pass
+        #sys.stderr.write("%s - - [%s] %s\n" %
+        #             (self.client_address[0],
+        #              self.log_date_time_string(),
+        #              format%args))
 
 
 class MySvr(WSGIRefServer):
