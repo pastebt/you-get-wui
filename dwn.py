@@ -76,7 +76,7 @@ def find_til(til, line):
     for t in til.strip().split("\n"):
         m = re.match(t.strip(), line)
         if m:
-            return m.group(1)
+            return m.group(1).strip()
     return None
 
 
@@ -100,6 +100,8 @@ def work(cfg, uobj, w2s):
         per = cfg[sect]['per']
         cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR=out)
         cmd = "cd %s && %s" % (dn, cmd)
+        if sect == 'download_dwm' and len(uobj.name) > 2:
+            cmd = cmd + " --title '%s'" % uobj.name
         print("cmd =", cmd)
         #print("til =", til)
 
