@@ -8,51 +8,13 @@ import traceback
 import queue
 from http.client import HTTPConnection
 from subprocess import Popen, STDOUT, PIPE
-from multiprocessing import Pipe, Queue, Process
+#from multiprocessing import Queue, Process
+from threading import Thread as Process
+from queue import Queue
 from urllib.parse import quote, unquote, urlparse
 
 from db import WORK, WAIT, STOP, DONE, FAIL
 from db import pick_url, update_filename, set_flag, get_by_flag
-
-
-class UpFile(object):
-    def __init__(self, filename, name, bun=""):
-        self.s = 0
-        self.f = open(filename, "r+b")
-        #fn = '_'.join(os.path.basename(filename).split('"'))
-        fn = os.path.basename(filename)
-        fn = "_".join(re.split('''\?|\:|\|''', fn))
-        fn = "'".join(re.split('"', fn))
-        pre = "--%s\r\n" % bun
-        pre = '%sContent-Disposition: form-data; name="%s"' % (pre, name)
-        pre = '%s; filename="%s"\r\n' % (pre, fn)
-        pre = '%sContent-Type: text/plain\r\n\r\n' % pre
-        self.pre = pre.encode("utf8")
-        self.end = ("\r\n--%s--" % bun).encode("ascii")
-        self.tal = 0
-        self.cnt = 0
-
-    def size(self):
-        self.tal = os.fstat(self.f.fileno()).st_size
-        return len(self.pre) + self.tal + len(self.end)
-
-    def read(self, bufsize):
-        #FIXME, if bufsize < len(self.pre) or bufsize < len(self.end)
-        if self.s == 0:
-            self.s = 1
-            #print '#',
-            return self.pre
-        if self.s == 1:
-            buf = self.f.read(bufsize)
-            if buf:
-                #print '#',
-                self.cnt += len(buf)
-                sys.stdout.write("\r%0.1f" % (self.cnt * 100.0 / self.tal))
-                return buf
-            self.s = 2
-            print("")
-            return self.end
-        return ""
 
 
 class WFP(object):
@@ -187,15 +149,6 @@ class Manager(Process):
         for w in self.works:
             self.m2w.put(None)      # FIXME should call worker.Terminal?
 
-    """
-Video Site: bilibili.com
-Title:      【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字幕】
-Type:       Flash video (video/x-flv)
-Size:       3410.85 MiB (3576536465 Bytes)
-
-Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字幕】.flv ...
-  0.7% ( 22.2/3410.9MB) [#
-    """
     def run(self):
         # reset DB flags
         kuos = get_by_flag(WORK)
