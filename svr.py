@@ -231,7 +231,7 @@ def rest():
         return html_play(mid)
     elif act == 'talk':
         q = Queue()
-        msg = {"who": "clt", "seq": mid, "ret": q}
+        msg = {"who": "clt", "seq": mid, "req": q}
         s2m.put(msg)
         r = q.get()
         return json.dumps(r)

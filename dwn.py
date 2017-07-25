@@ -10,7 +10,7 @@ from http.client import HTTPConnection
 from subprocess import Popen, STDOUT, PIPE
 #from multiprocessing import Queue, Process
 from threading import Thread #as Process
-from queue import Queue
+from queue import Queue, Full, Empty
 from urllib.parse import quote, unquote, urlparse
 
 from db import WORK, WAIT, STOP, DONE, FAIL
@@ -147,10 +147,19 @@ class Manager(Thread):
         for uo in tuos:
             set_flag(uo, STOP)
 
-        self.logs = []   # web page change logging, sequence id, element id and content html
-
+        # web page change logging, sequence id, element id and content html
+        self.logs = []
+        # web page reqest queue list
+        self.reqs = []
+        # sequence id
+        self.seq = 0
         while True:
-            msg = self.s2m.get()
+            self.seq += 1
+            try:
+                msg = self.s2m.get(timeout=10)
+            except Empty:
+                self.update_logs(None)
+                continue
             if msg is None:
                 break
             print("pid=%s, self.s2m.get=%s" % (os.getpid(), repr(msg)))
@@ -164,27 +173,30 @@ class Manager(Thread):
                     self.m2w.put(pick_url(mid))
             elif who == 'clt':  # http client send request
                 self.query_logs(msg)
-            elif who == 'error':
-                print(msg, file=sys.stderr)
-                print("", file=sys.stderr)
             else:
                 print("Unknow msg:", file=sys.stderr)
                 print(msg, file=sys.stderr)
                 print("", file=sys.stderr)
 
+    def notice_all(self, res):
+        for r in self.reqs:
+            q = r.get("req")
+            if q:
+                q.put(res)
+        self.reqs = []
+
     def query_logs(self, msg):
-        pass
+        seq = msg.get('seq', 0)
+        sbg = self.logs[0].get('seq', 0) if self.logs else 0
+        sed = self.logs[-1].get('seq', 0) if self.logs else 0
+        if not self.logs or seq == sed:
+            self.reqs.append(msg)
+            return
+        #TODO, if has logs, slice out and send back
 
     def update_logs(self, msg):
-        pass
-
-    def handle_mid(self, mid, dat):
-        print("handle_mid", dat)
-        #if dat.startswith("Process "):
-        #    dd = dat.split()
-        #    act = dd[2].lower()
-        #    print("mid=%s, act=%s" % (mid, act))
-        #    set_flag(mid, act)
-        #elif dat.startswith("Downloading "):
-        #    print("mid=[%s]" % mid)
-        #    update_filename(mid, dat[12:-5])
+        l = {"seq": self.seq}
+        if msg:
+            pass    # TODO, build log
+        self.logs.append(l)
+        self.notice_all(l)
