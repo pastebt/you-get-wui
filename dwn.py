@@ -49,7 +49,7 @@ def nb_put(q, dat):
         pass
 
 
-def work(cfg, uobj, w2s):
+def work(cfg, uobj, s2m):
     set_flag(uobj, WORK)
     for sect in cfg.sections():
         if not sect.startswith('download_'):
@@ -77,14 +77,12 @@ def work(cfg, uobj, w2s):
                 print("got title:", t)
                 update_filename(uobj, os.path.join(dn, out),
                                 os.path.basename(t))
-                #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
-                nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "got title"})
+                s2m.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
             else:
                 f = find_til(per, l)
                 if f:
                     e = "\r"
-                    #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
-                    nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
+                    s2m.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
             print(l.rstrip(), end=e)
 
         p.wait()
@@ -96,8 +94,7 @@ def work(cfg, uobj, w2s):
     else:
         print("mid %d failed" % uobj.mid)
         set_flag(uobj, FAIL)
-    #w2s.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
-    nb_put(w2s, {"who": "worker", "mid": uobj.mid, "dat": "exit"})
+    s2m.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
     cpto = uobj.opts.get("cpto")
     pcmd = cfg['server'].get('post_cmd')
     if uobj.flag == DONE and cpto and pcmd:
@@ -107,9 +104,9 @@ def work(cfg, uobj, w2s):
 
 
 class Worker(Process):
-    def __init__(self, cfg, s2m, m2w, w2s):
+    def __init__(self, cfg, s2m, m2w):
         Process.__init__(self)
-        self.cfg, self.s2m, self.m2w, self.w2s = cfg, s2m, m2w, w2s
+        self.cfg, self.s2m, self.m2w = cfg, s2m, m2w
 
     def run(self):
         while True:
@@ -119,16 +116,8 @@ class Worker(Process):
             #sys.stdout = WFP("worker", self.s2m, uobj.mid)
             #sys.stderr = WFP("error", self.s2m, uobj.mid)
             print("Process mid=%d bg" % uobj.mid)
-            work(self.cfg, uobj, self.w2s)
+            work(self.cfg, uobj, self.s2m)
             print("Process mid=%d ed" % uobj.mid)
-            #try:
-            #    work(self.cfg, uobj)
-            #except:
-            #    t, l, tb = sys.exc_info()
-            #    msg = "".join(traceback.format_exception(t, l, tb))
-            #    print("Process mid=%d Fail\n%s" % (uobj.mid, msg))
-            #else:
-            #    print("Process mid=%d Stop" % uobj.mid)
 
 
 class Manager(Process):
@@ -136,18 +125,18 @@ class Manager(Process):
         Process.__init__(self)
         self.s2m = Queue()      # message Manager receive from worker and svr
         self.m2w = Queue()      # message send to workers
-        self.w2s = Queue(10)    # message send to svr from worker or manager (notice update web page)
         #self.t2m = Queue()      # svr thread send to manager, client queue
         self.cfg = cfg
         wnum = 1    # 3
         self.works = [0] * wnum
         for i in range(wnum):
-            self.works[i] = Worker(self.cfg, self.s2m, self.m2w, self.w2s)
+            self.works[i] = Worker(self.cfg, self.s2m, self.m2w)
             self.works[i].start()
 
     def stop(self):
         for w in self.works:
             self.m2w.put(None)      # FIXME should call worker.Terminal?
+        self.s2m.put(None)
 
     def run(self):
         # reset DB flags
@@ -158,20 +147,21 @@ class Manager(Process):
         for uo in tuos:
             set_flag(uo, STOP)
 
-        logs = []   # web page change logging, sequence id, element id and content html
+        self.logs = []   # web page change logging, sequence id, element id and content html
 
         while True:
             msg = self.s2m.get()
+            if msg is None:
+                break
             print("pid=%s, self.s2m.get=%s" % (os.getpid(), repr(msg)))
             who = msg.get('who')
             if who == 'worker':
-                self.handle_mid(msg['mid'], msg['dat'])
-            elif who == 'svr':
-                #self.m2w.put(msg['mid'])
-                self.m2w.put(pick_url(msg['mid']))
-            elif who == 'clt':
-                #self.w2s.put(msg)
-                nb_put(self.w2s, msg)
+                self.update_logs(msg)
+            #elif who == 'svr':
+            #    #self.m2w.put(msg['mid'])
+            #    self.m2w.put(pick_url(msg['mid']))
+            elif who == 'clt':  # http client send request
+                self.query_logs(msg)
             elif who == 'error':
                 sys.stderr.write(msg['dat'])   # FIXME
                 sys.stderr.write("\n")

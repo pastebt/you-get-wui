@@ -3,6 +3,7 @@
 import os
 import sys
 import configparser
+from queue import Queue
 from urllib.parse import quote
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
@@ -212,6 +213,12 @@ def rest():
         del_one_url(mid)
     elif act == 'play':
         return html_play(mid)
+    elif act == 'draw':
+        q = Queue()
+        msg = {"who": "clt", "seq": mid, "ret": q}
+        s2m.put(msg)
+        r = q.get()
+        return json.dumps(r)
     #redirect("/")
     s2m.put({"who": "clt"})
     return ""
@@ -219,9 +226,9 @@ def rest():
 
 @get('/list')
 def list():
+    q = Queue()
     try:
-        w2s.get(timeout=10)
-        #print("got from w2s")
+        q.get(timeout=10)
     except Exception as e:
         print(e)
     return html_list()
@@ -305,7 +312,6 @@ if __name__ == '__main__':
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
-    w2s = mon.w2s
     mon.start()
     run(server=MySvr, host='', port=int(cfg['server']['port']))
     mon.stop()
