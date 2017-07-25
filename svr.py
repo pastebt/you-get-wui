@@ -32,6 +32,25 @@ def html_head():
         }
         </style>
         <script>
+        var seq = 0;
+        function talk() {
+            var req = new XMLHttpRequest();
+            req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
+            request.onload = function() {
+            //alert(request.status);
+            if (request.status >= 200 && request.status < 400) {
+                // Success!
+                // alert(request.responseText);
+                var data = JSON.parse(request.responseText);
+                alert(data);
+                talk();
+            } else {
+                // We reached our target server, but it returned an error
+            }
+            };
+            req.send();
+        }
+
         function mid_act(mid, act) {
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + mid + "&act=" + act, true);
@@ -104,7 +123,7 @@ def html_form(msg):
         </table>
         </form>
         <div id="url_list">""" + html_list() + """</div>
-        <script>reload_urls_list();</script>
+        <script>talk();</script>
     </body></html>
         """
 
@@ -173,9 +192,9 @@ def conv(src):
     return [ord(x) for x in src]
 
 
-def start_one(mid):
-    set_flag(mid, 'wait')
-    s2m.put({"who": "svr", "mid": mid})
+#def start_one(mid):
+#    set_flag(mid, 'wait')
+#    s2m.put({"who": "clt", "mid": mid})
 
 
 @route('/play/<mid>')
@@ -203,20 +222,22 @@ def rest():
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
     #print("rest: pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
+    msg = {"who": "clt", "mid": mid, "act": act}
     if act in ("start",):
-        start_one(mid)
+        #start_one(mid)
+        msg["who"] = "svr"
     elif act == 'del':
         del_one_url(mid)
     elif act == 'play':
         return html_play(mid)
-    elif act == 'draw':
+    elif act == 'talk':
         q = Queue()
         msg = {"who": "clt", "seq": mid, "ret": q}
         s2m.put(msg)
         r = q.get()
         return json.dumps(r)
     #redirect("/")
-    s2m.put({"who": "clt"})
+    s2m.put(msg)
     return ""
 
 

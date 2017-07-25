@@ -157,18 +157,20 @@ class Manager(Process):
             who = msg.get('who')
             if who == 'worker':
                 self.update_logs(msg)
-            #elif who == 'svr':
-            #    #self.m2w.put(msg['mid'])
-            #    self.m2w.put(pick_url(msg['mid']))
+            elif who == 'svr':
+                mid, act = msg.get('mid'), msg.get('act')
+                if act == 'start':
+                    set_flag(mid, 'wait')
+                    self.m2w.put(pick_url(mid))
             elif who == 'clt':  # http client send request
                 self.query_logs(msg)
             elif who == 'error':
-                sys.stderr.write(msg['dat'])   # FIXME
-                sys.stderr.write("\n")
+                print(msg, file=sys.stderr)
+                print("", file=sys.stderr)
             else:
-                sys.stderr.write("Unknow msg:\n")
-                sys.stderr.write(msg)
-                sys.stderr.write("\n")
+                print("Unknow msg:", file=sys.stderr)
+                print(msg, file=sys.stderr)
+                print("", file=sys.stderr)
 
     def query_logs(self, msg):
         pass
