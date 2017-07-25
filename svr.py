@@ -8,7 +8,6 @@ from urllib.parse import quote
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
 from socketserver import ThreadingMixIn
-#from socketserver import ForkingMixIn
 
 from bottle import WSGIRefServer
 from bottle import get, post, request
@@ -269,7 +268,6 @@ def do_post():
     avitil = req_str('avitil')
     destdn = req_str('destdn')
     copyto = req_str('copyto')
-    #copyto = request.forms.get('copyto', "").strip()
     
     if len(aviurl) > 4:
         opt = {'dest': destdn}
@@ -278,7 +276,8 @@ def do_post():
         i = add_one_url(aviurl, avitil, opt)
         print("i =", i, "opts =", opt)
         if sub == 'Start':
-            start_one(i)
+            #start_one(i)
+            s2m.put({"who": "svr", "mid": mid, "act": act})
         body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                         title=avitil, url=aviurl)
     else:
@@ -287,18 +286,17 @@ def do_post():
     return html_head() + html_form(body)
 
 
-#class FWSGISvr(ForkingMixIn, WSGIServer):
 class FWSGISvr(ThreadingMixIn, WSGIServer):
     pass
 
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        pass
-        #sys.stderr.write("%s - - [%s] %s\n" %
-        #             (self.client_address[0],
-        #              self.log_date_time_string(),
-        #              format%args))
+        #pass
+        sys.stderr.write("%s - - [%s] %s\n" %
+                     (self.client_address[0],
+                      self.log_date_time_string(),
+                      format%args))
 
 
 class MySvr(WSGIRefServer):

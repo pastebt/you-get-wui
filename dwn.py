@@ -9,7 +9,7 @@ import queue
 from http.client import HTTPConnection
 from subprocess import Popen, STDOUT, PIPE
 #from multiprocessing import Queue, Process
-from threading import Thread as Process
+from threading import Thread #as Process
 from queue import Queue
 from urllib.parse import quote, unquote, urlparse
 
@@ -103,9 +103,9 @@ def work(cfg, uobj, s2m):
         Popen(cmd, shell=True).wait()
 
 
-class Worker(Process):
+class Worker(Thread):
     def __init__(self, cfg, s2m, m2w):
-        Process.__init__(self)
+        Thread.__init__(self)
         self.cfg, self.s2m, self.m2w = cfg, s2m, m2w
 
     def run(self):
@@ -120,9 +120,9 @@ class Worker(Process):
             print("Process mid=%d ed" % uobj.mid)
 
 
-class Manager(Process):
+class Manager(Thread):
     def __init__(self, cfg):
-        Process.__init__(self)
+        Thread.__init__(self)
         self.s2m = Queue()      # message Manager receive from worker and svr
         self.m2w = Queue()      # message send to workers
         #self.t2m = Queue()      # svr thread send to manager, client queue
