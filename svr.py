@@ -31,8 +31,10 @@ def html_head():
         }
         </style>
         <script>
+
         var seq = 0;
         function talk() {
+            alert("start talk");
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
             request.onload = function() {
@@ -40,14 +42,35 @@ def html_head():
             if (request.status >= 200 && request.status < 400) {
                 // Success!
                 // alert(request.responseText);
-                var data = JSON.parse(request.responseText);
-                alert(data);
-                talk();
+                var datas = JSON.parse(request.responseText);
+                alert(datas);
+                for (i in datas) {
+                    proc_one(datas[1]);
+                }
+                req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
+                req.send();
             } else {
                 // We reached our target server, but it returned an error
+                //if (myObj.nam == undefined) 
             }
             };
             req.send();
+        }
+
+        function proc_one(msg) {
+            seq = msg.seq;
+            switch (msg.act) {
+            case "del":
+                var elm = document.getElementById(msg.elm);
+                elm.parentNode.removeChild(elm);
+                break;
+            case "inner":
+                var elm = document.getElementById(msg.elm);
+                elm.innerHTML = msg.data;
+                break;
+            default:
+                alert("Unknown act: " + msg.act);
+            }
         }
 
         function mid_act(mid, act) {
@@ -74,7 +97,7 @@ def html_head():
                 if (ww == 1) {
                     //alert(ww)
                     request.open('GET', '/list', true);
-                    request.send()
+                    request.send();
                 }
             } else {
             // We reached our target server, but it returned an error

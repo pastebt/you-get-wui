@@ -125,7 +125,6 @@ class Manager(Thread):
         Thread.__init__(self)
         self.s2m = Queue()      # message Manager receive from worker and svr
         self.m2w = Queue()      # message send to workers
-        #self.t2m = Queue()      # svr thread send to manager, client queue
         self.cfg = cfg
         wnum = 1    # 3
         self.works = [0] * wnum
@@ -148,6 +147,11 @@ class Manager(Thread):
             set_flag(uo, STOP)
 
         # web page change logging, sequence id, element id and content html
+        # {"seq": seq_id, "act": "action", "elm": "elm_id", "data": "data"}
+        # seq                   # only update seq id, not act
+        # seq, act              #
+        # seq, act, elm         # act: del, remove elm
+        # seq, act, elm, data   # act: inner, data is inner_html for elm
         self.logs = []
         # web page reqest queue list
         self.reqs = []
