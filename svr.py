@@ -42,6 +42,7 @@ def html_head():
         function reload_urls_list() {
             var listobj = document.getElementById('url_list');
             //alert(listobj);
+            // leftSection.parentNode.removeChild(leftSection);
             var request = new XMLHttpRequest();
             request.open('GET', '/list', true);
             request.onload = function() {
@@ -74,11 +75,7 @@ def html_head():
         """
 
 
-def html_foot():
-    return "</body></html>"
-
-
-def html_form():
+def html_form(msg):
     pcmd = cfg['server'].get('post_cmd')
     if pcmd:
         cpto = """
@@ -88,7 +85,7 @@ def html_form():
     else:
         cpto = ""
 
-    return """
+    return msg + """
         <form action="/" method="post">
         <table>
             <tr><td>URL:</td>
@@ -106,8 +103,9 @@ def html_form():
             </tr>
         </table>
         </form>
-        <div id="url_list"></div>
+        <div id="url_list">""" + html_list() + """</div>
         <script>reload_urls_list();</script>
+    </body></html>
         """
 
 
@@ -125,16 +123,15 @@ def html_list():
         <tr></thead>
         <tbody>
         %for url in urls:
-            <tr>
-                <td> <a title="{{url.updt}}"
+            <tr id="tr_{{url.mid}}">
+                <td id="td_name_{{url.mid}}"> <a title="{{url.updt}}"
                 %if url._flag_name == "Done":
                     href="/rest?mid={{url.mid}}&act=play" target='_blank'
                 %end
                 >{{url.name}}</a> </td>
                 <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
-                <td> <a href="#{{url.mid}}flag" onclick="mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
-                <td>
-                <!-- a href="/rest?mid={{url.mid}}&amp;act=del" -->
+                <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
+                <td id="td_func_{{url.mid}}">
                 <a href="#{{url.mid}}del" onclick="mid_act({{url.mid}}, 'del');">
                 del</a> </td>
             </tr>
@@ -198,7 +195,6 @@ def server_static(mid):
                            root=os.path.dirname(uobj.path),
                            download=quote(os.path.basename(uobj.path)))
                            #download=True)
-        #return html_head() + html_play(uobj) + html_foot()
 
 
 @get('/rest')
@@ -228,7 +224,7 @@ def rest():
 def list():
     q = Queue()
     try:
-        q.get(timeout=10)
+        q.get(timeout=1)
     except Exception as e:
         print(e)
     return html_list()
@@ -237,8 +233,7 @@ def list():
 @get('/<:re:.*>')
 def index():
     s2m.put({"who": "clt"})
-    #return html_head() + html_form() + html_list() + html_foot()
-    return html_head() + html_form() + html_foot()
+    return html_head() + html_form("")
 
 
 def req_str(name):
@@ -268,8 +263,7 @@ def do_post():
     else:
         body = "Miss URL"
     s2m.put({"who": "clt"})
-    #return html_head() + body + html_form() + html_list() + html_foot()
-    return html_head() + body + html_form() + html_foot()
+    return html_head() + html_form(body)
 
 
 #class FWSGISvr(ForkingMixIn, WSGIServer):

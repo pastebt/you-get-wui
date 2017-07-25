@@ -170,6 +170,12 @@ class Manager(Process):
                 sys.stderr.write(msg)
                 sys.stderr.write("\n")
 
+    def query_logs(self, msg):
+        pass
+
+    def update_logs(self, msg):
+        pass
+
     def handle_mid(self, mid, dat):
         print("handle_mid", dat)
         #if dat.startswith("Process "):
