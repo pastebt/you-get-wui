@@ -254,7 +254,6 @@ def do_post():
             opt['cpto'] = copyto
         i = add_one_url(aviurl, avitil, opt)
         print("i =", i, "opts =", opt)
-        #print("post pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
         if sub == 'Start':
             start_one(i)
         body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',

@@ -158,6 +158,8 @@ class Manager(Process):
         for uo in tuos:
             set_flag(uo, STOP)
 
+        logs = []   # web page change logging, sequence id, element id and content html
+
         while True:
             msg = self.s2m.get()
             print("pid=%s, self.s2m.get=%s" % (os.getpid(), repr(msg)))
