@@ -13,6 +13,8 @@ from threading import Thread #as Process
 from queue import Queue, Full, Empty
 from urllib.parse import quote, unquote, urlparse
 
+from bottle import template
+
 from db import UOBJ
 from db import WORK, WAIT, STOP, DONE, FAIL
 from db import pick_url, update_filename
@@ -61,6 +63,14 @@ def set_flag(s2m, uobj, flag):
     s2m.put({"who": "worker", "mid": i, "act": "flag", "data": fln})
 
 
+def show_title(uobj):
+    return template("""<a title="{{url.updt}}"
+                %if url.flag == {{done}}:
+                    href="/rest?mid={{url.mid}}&act=play" target='_blank'
+                %end
+                >{{url.name}}</a>""", url=uobj, done=DONE)
+
+
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
     for sect in cfg.sections():
@@ -90,7 +100,7 @@ def work(cfg, uobj, s2m):
                 update_filename(uobj, os.path.join(dn, out),
                                 os.path.basename(t))
                 s2m.put({"who": "worker", "mid": uobj.mid,
-                         "act": "title", "data": os.path.basename(t)})
+                         "act": "title", "data": show_title(uobj)})
             else:
                 f = find_til(per, l)
                 if f:
@@ -104,11 +114,13 @@ def work(cfg, uobj, s2m):
         if p.returncode == 0:
             print("mid %d done" % uobj.mid)
             set_flag(s2m, uobj, DONE)
+            s2m.put({"who": "worker", "mid": uobj.mid,
+                     "act": "title", "data": show_title(uobj)})
             break
     else:
         print("mid %d failed" % uobj.mid)
         set_flag(self.s2m, uobj, FAIL)
-    #s2m.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
+
     cpto = uobj.opts.get("cpto")
     pcmd = cfg['server'].get('post_cmd')
     if uobj.flag == DONE and cpto and pcmd:
@@ -167,6 +179,7 @@ class Manager(Thread):
         # seq, act              #
         # seq, act, elm         # act: del, remove elm
         # seq, act, elm, data   # act: set, data is inner_html for elm
+        #                       # act: new
         self.logs = []
         # web page reqest queue list
         self.reqs = []
@@ -182,6 +195,16 @@ class Manager(Thread):
             if msg is None:
                 break
             print("self.s2m.get = ", msg)
+            # who: svr
+            #   act:start
+            #       del
+            #       new
+            # who: clt
+            #      ask
+            # who: worker
+            #      flag
+            #      title
+            #      per
             who = msg.get('who')
             if who == 'worker':
                 self.update_logs(msg)
