@@ -61,8 +61,9 @@ def html_head():
             //alert("seq =" + seq);
             switch (msg.act) {
             case "add":
-                var bas = document.getElementById(msg.elm);
+                var bas = document.getElementById("urls_tbody");
                 var itm = document.createElement("tr");
+                itm.setAttribute("id", msg.elm);
                 itm.innerHTML = msg.data;
                 bas.insertBefore(itm, bas.childNodes[0]);
                 break;
@@ -85,6 +86,7 @@ def html_head():
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + mid + "&act=" + act);
             req.send();
+            return false;
         }
         </script>
         </head>
@@ -160,9 +162,9 @@ def html_list():
                 %end
                 >{{url.name}}</a> </td>
                 <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
-                <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
+                <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="return mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
                 <td id="td_func_{{url.mid}}">
-                <a href="#{{url.mid}}del" onclick="mid_act({{url.mid}}, 'del');">
+                <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">
                 del</a> </td>
             </tr>
         %end

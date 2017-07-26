@@ -17,7 +17,7 @@ from bottle import template
 
 from db import UOBJ
 from db import WORK, WAIT, STOP, DONE, FAIL
-from db import pick_url, update_filename
+from db import pick_url, update_filename,  short_it
 from db import get_act_fln, set_db_flag, get_by_flag
 
 
@@ -65,10 +65,21 @@ def set_flag(s2m, uobj, flag):
 
 def show_title(uobj):
     return template("""<a title="{{url.updt}}"
-                %if url.flag == {{done}}:
+                %if url.flag == done:
                     href="/rest?mid={{url.mid}}&act=play" target='_blank'
                 %end
                 >{{url.name}}</a>""", url=uobj, done=DONE)
+
+
+def show_tr_inner(uobj):
+    #print("uobj=", uobj)
+    t = show_title(uobj)
+    return template("""<td id="td_name_{{url.mid}}"> {{!til}} </td>
+                       <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
+                       <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="return mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
+                       <td id="td_func_{{url.mid}}">
+                       <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">del</a> </td>""",
+                    url=uobj, til=t)
 
 
 def work(cfg, uobj, s2m):
@@ -253,12 +264,14 @@ class Manager(Thread):
         ls = [l]
         act = msg.get('act')
         if act == 'add':
+            uo = pick_url(msg['mid'])
             l['act'] = 'set'
             l['elm'] = 'post_msg'
             l['data'] = 'posted %d' %  msg['mid']   # TODO
             self.seq += 1
-            l = {"seq": self.seq, 'act': 'add', 'elm':'urls_tbody',
-                 'data': '<td>abcd</td>'}  # TODO
+            l = {"seq": self.seq, 'act': 'add',
+                 'elm':'tr_%s' % msg['mid'],
+                 'data': show_tr_inner(uo)}
             ls.append(l)
         elif act == 'del':
             l['act'] = 'del'

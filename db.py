@@ -51,6 +51,12 @@ class UOBJ(object):
     def __init__(self, dats=[]):
         for dat in dats:
             setattr(self, dat[0], dat[1])
+
+        act, fh = get_act_fln(self.flag)
+        setattr(self, '_short_url', short_it(self.url))
+        setattr(self, '_flag_act', act)
+        setattr(self, '_flag_name', fh)
+
         if hasattr(self, "opts"):
             if self.opts:
                 self.opts = json.loads(self.opts)
@@ -117,12 +123,12 @@ def query_urls():
     urls = query_select("select rowid as mid, * from aviurl "
                         "order by updt desc")
     for uo in urls:
-        act, fh = get_act_fln(uo.flag)
+        #act, fh = get_act_fln(uo.flag)
         if uo.flag in (WAIT, WORK):
             ww = 1
-        setattr(uo, '_short_url', short_it(uo.url))
-        setattr(uo, '_flag_act', act)
-        setattr(uo, '_flag_name', fh)
+        #setattr(uo, '_short_url', short_it(uo.url))
+        #setattr(uo, '_flag_act', act)
+        #setattr(uo, '_flag_name', fh)
     return urls, ww
 
 
