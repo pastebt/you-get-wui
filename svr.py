@@ -43,24 +43,29 @@ def html_head():
             if (req.status >= 200 && req.status < 400) {
                 // Success!
                 var datas = JSON.parse(req.responseText);
-                alert(datas);
+                //alert(datas);
                 for (i in datas) {
                     proc_one(datas[i]);
                 }
+                alert("after seq =" + seq);
                 req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
+                alert("callback send");
                 req.send();
+                //talk();
             } else {
                 // We reached our target server, but it returned an error
                 //if (myObj.nam == undefined) 
                 alert("talk failed");
             }
             };
+            alert("send");
             req.send();
         }
 
         function proc_one(msg) {
+            if (msg.seq == undefined) { return; }
             seq = msg.seq;
-            alert(seq);
+            alert("seq =" + seq);
             switch (msg.act) {
             case "del":
                 var elm = document.getElementById(msg.elm);
@@ -69,6 +74,8 @@ def html_head():
             case "set":
                 var elm = document.getElementById(msg.elm);
                 elm.innerHTML = msg.data;
+                break;
+            case undefined:
                 break;
             default:
                 alert("Unknown act: " + msg.act);

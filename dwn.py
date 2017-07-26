@@ -197,6 +197,7 @@ class Manager(Thread):
                 print("", file=sys.stderr)
 
     def notice_all(self, res):
+        print("self.reqs =", self.reqs)
         for r in self.reqs:
             q = r.get("req")
             if q:
