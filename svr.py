@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import configparser
 from queue import Queue
 from urllib.parse import quote
@@ -37,21 +38,21 @@ def html_head():
             alert("start talk");
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
-            request.onload = function() {
-            //alert(request.status);
-            if (request.status >= 200 && request.status < 400) {
+            req.onload = function() {
+            //alert(req.status);
+            if (req.status >= 200 && req.status < 400) {
                 // Success!
-                // alert(request.responseText);
-                var datas = JSON.parse(request.responseText);
+                var datas = JSON.parse(req.responseText);
                 alert(datas);
                 for (i in datas) {
-                    proc_one(datas[1]);
+                    proc_one(datas[i]);
                 }
                 req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
                 req.send();
             } else {
                 // We reached our target server, but it returned an error
                 //if (myObj.nam == undefined) 
+                alert("talk failed");
             }
             };
             req.send();
@@ -59,6 +60,7 @@ def html_head():
 
         function proc_one(msg) {
             seq = msg.seq;
+            alert(seq);
             switch (msg.act) {
             case "del":
                 var elm = document.getElementById(msg.elm);
@@ -77,7 +79,7 @@ def html_head():
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + mid + "&act=" + act, true);
             req.send();
-            reload_urls_list();
+            //reload_urls_list();
         }
 
         function reload_urls_list() {
@@ -254,8 +256,11 @@ def rest():
         return html_play(mid)
     elif act == 'talk':
         q = Queue()
-        msg = {"who": "clt", "seq": mid, "req": q}
-        s2m.put(msg)
+        try:
+            mid = int(mid)
+        except ValueError:
+            mid = 0
+        s2m.put({"who": "clt", "seq": mid, "req": q})
         r = q.get()
         return json.dumps(r)
     #redirect("/")
@@ -300,7 +305,7 @@ def do_post():
         print("i =", i, "opts =", opt)
         if sub == 'Start':
             #start_one(i)
-            s2m.put({"who": "svr", "mid": mid, "act": act})
+            s2m.put({"who": "svr", "mid": i, "act": 'start'})
         body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                         title=avitil, url=aviurl)
     else:

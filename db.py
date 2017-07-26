@@ -102,16 +102,14 @@ def get_act_fln(fl):
     elif fl == WAIT:
         fh = 'waiting'
         act = "stop"
-        ww = 1
     elif fl == WORK:
         fh = 'working'
         act = "stop"
-        ww = 1
     elif fl == FAIL:
         fh = 'retry'
     elif fl == DONE:
         fh = 'Done'
-    return act, fh, ww
+    return act, fh
 
 
 def query_urls():

@@ -13,8 +13,10 @@ from threading import Thread #as Process
 from queue import Queue, Full, Empty
 from urllib.parse import quote, unquote, urlparse
 
+from db import UOBJ
 from db import WORK, WAIT, STOP, DONE, FAIL
-from db import pick_url, update_filename, set_db_flag, get_by_flag
+from db import pick_url, update_filename
+from db import get_act_fln, set_db_flag, get_by_flag
 
 
 class WFP(object):
@@ -55,7 +57,8 @@ def set_flag(s2m, uobj, flag):
         i = uobj.mid
         uobj.flag = flag
     set_db_flag(i, flag)
-    s2m.put({"who": "worker", "mid": i, "act": "flag", "data": show_flag(flag)})
+    act, fln = get_act_fln(flag)
+    s2m.put({"who": "worker", "mid": i, "act": "flag", "data": fln})
 
 
 def work(cfg, uobj, s2m):
@@ -100,7 +103,7 @@ def work(cfg, uobj, s2m):
         print(sect, p.returncode)
         if p.returncode == 0:
             print("mid %d done" % uobj.mid)
-            set_flag(self.s2m, uobj, DONE)
+            set_flag(s2m, uobj, DONE)
             break
     else:
         print("mid %d failed" % uobj.mid)
@@ -152,10 +155,10 @@ class Manager(Thread):
         # reset DB flags
         kuos = get_by_flag(WORK)
         for uo in kuos:
-            set_db_flag(uo, STOP)
+            set_db_flag(uo.mid, STOP)
         tuos = get_by_flag(WAIT)
         for uo in tuos:
-            set_db_flag(uo, STOP)
+            set_db_flag(uo.mid, STOP)
 
         # web page change logging, sequence id, element id and content html
         # {"seq": seq_id, "act": "action", "elm": "elm_id", "data": "data"}
@@ -167,7 +170,7 @@ class Manager(Thread):
         # web page reqest queue list
         self.reqs = []
         # sequence id
-        self.seq = 0
+        self.seq = 1
         while True:
             self.seq += 1
             try:
@@ -202,12 +205,21 @@ class Manager(Thread):
 
     def query_logs(self, msg):
         seq = msg.get('seq', 0)
+        print("query_logs, seq =", seq)
         sbg = self.logs[0].get('seq', 0) if self.logs else 0
         sed = self.logs[-1].get('seq', 0) if self.logs else 0
         if not self.logs or seq == sed:
             self.reqs.append(msg)
             return
         #TODO, if has logs, slice out and send back
+        ret = []
+        for l in self.logs:
+            if l['seq'] > seq:
+                ret.append(l)
+        print("ret =", ret)
+        q = msg.get("req")
+        if q:
+            q.put(ret)
 
     def update_logs(self, msg):
         l = {"seq": self.seq}
