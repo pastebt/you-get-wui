@@ -15,7 +15,7 @@ from bottle import run, template, route, redirect
 from bottle import static_file
 
 from dwn import Manager
-from db import init_db, set_flag
+from db import init_db #, set_flag
 from db import pick_url, query_urls
 from db import add_one_url, del_one_url
 
@@ -64,7 +64,7 @@ def html_head():
                 var elm = document.getElementById(msg.elm);
                 elm.parentNode.removeChild(elm);
                 break;
-            case "inner":
+            case "set":
                 var elm = document.getElementById(msg.elm);
                 elm.innerHTML = msg.data;
                 break;

@@ -14,7 +14,7 @@ from queue import Queue, Full, Empty
 from urllib.parse import quote, unquote, urlparse
 
 from db import WORK, WAIT, STOP, DONE, FAIL
-from db import pick_url, update_filename, set_flag, get_by_flag
+from db import pick_url, update_filename, set_db_flag, get_by_flag
 
 
 class WFP(object):
@@ -49,8 +49,17 @@ def nb_put(q, dat):
         pass
 
 
+def set_flag(s2m, uobj, flag):
+    i = uobj
+    if isinstance(uobj, UOBJ):
+        i = uobj.mid
+        uobj.flag = flag
+    set_db_flag(i, flag)
+    s2m.put({"who": "worker", "mid": i, "act": "flag", "data": show_flag(flag)})
+
+
 def work(cfg, uobj, s2m):
-    set_flag(uobj, WORK)
+    set_flag(s2m, uobj, WORK)
     for sect in cfg.sections():
         if not sect.startswith('download_'):
             continue
@@ -77,24 +86,26 @@ def work(cfg, uobj, s2m):
                 print("got title:", t)
                 update_filename(uobj, os.path.join(dn, out),
                                 os.path.basename(t))
-                s2m.put({"who": "worker", "mid": uobj.mid, "dat": "got title"})
+                s2m.put({"who": "worker", "mid": uobj.mid,
+                         "act": "title", "data": os.path.basename(t)})
             else:
                 f = find_til(per, l)
                 if f:
                     e = "\r"
-                    s2m.put({"who": "worker", "mid": uobj.mid, "dat": "per %s" % f})
+                    s2m.put({"who": "worker", "mid": uobj.mid,
+                             "act": "per", "data": "per %s" % f})
             print(l.rstrip(), end=e)
 
         p.wait()
         print(sect, p.returncode)
         if p.returncode == 0:
             print("mid %d done" % uobj.mid)
-            set_flag(uobj, DONE)
+            set_flag(self.s2m, uobj, DONE)
             break
     else:
         print("mid %d failed" % uobj.mid)
-        set_flag(uobj, FAIL)
-    s2m.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
+        set_flag(self.s2m, uobj, FAIL)
+    #s2m.put({"who": "worker", "mid": uobj.mid, "dat": "exit"})
     cpto = uobj.opts.get("cpto")
     pcmd = cfg['server'].get('post_cmd')
     if uobj.flag == DONE and cpto and pcmd:
@@ -141,17 +152,17 @@ class Manager(Thread):
         # reset DB flags
         kuos = get_by_flag(WORK)
         for uo in kuos:
-            set_flag(uo, STOP)
+            set_db_flag(uo, STOP)
         tuos = get_by_flag(WAIT)
         for uo in tuos:
-            set_flag(uo, STOP)
+            set_db_flag(uo, STOP)
 
         # web page change logging, sequence id, element id and content html
         # {"seq": seq_id, "act": "action", "elm": "elm_id", "data": "data"}
         # seq                   # only update seq id, not act
         # seq, act              #
         # seq, act, elm         # act: del, remove elm
-        # seq, act, elm, data   # act: inner, data is inner_html for elm
+        # seq, act, elm, data   # act: set, data is inner_html for elm
         self.logs = []
         # web page reqest queue list
         self.reqs = []
@@ -173,7 +184,7 @@ class Manager(Thread):
             elif who == 'svr':
                 mid, act = msg.get('mid'), msg.get('act')
                 if act == 'start':
-                    set_flag(mid, 'wait')
+                    set_flag(self.s2m, mid, WAIT)
                     self.m2w.put(pick_url(mid))
             elif who == 'clt':  # http client send request
                 self.query_logs(msg)
@@ -201,6 +212,17 @@ class Manager(Thread):
     def update_logs(self, msg):
         l = {"seq": self.seq}
         if msg:
-            pass    # TODO, build log
+            if msg['act'] == 'del':
+                l['act'] = msg['act']
+                l['elm'] = "tr_%s" % msg['mid']
+            elif msg['act'] in ('flag', 'per'):
+                l['act'] = "set"
+                l['elm'] = "td_flag_%s" % msg['mid']
+                l['data'] = msg['data']
+            elif msg['act'] == 'title':
+                l['act'] = "set"
+                l['elm'] = "td_name_%s" % msg['mid']
+                l['data'] = msg['data']
+
         self.logs.append(l)
         self.notice_all(l)

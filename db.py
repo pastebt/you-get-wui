@@ -94,29 +94,35 @@ def short_it(src, size=30):
     return src[:size - 3] + '...'
 
 
+def get_act_fln(fl):
+    fh = "FF"
+    act = "start"
+    if fl is None or fl == STOP:
+        fh = 'start'
+    elif fl == WAIT:
+        fh = 'waiting'
+        act = "stop"
+        ww = 1
+    elif fl == WORK:
+        fh = 'working'
+        act = "stop"
+        ww = 1
+    elif fl == FAIL:
+        fh = 'retry'
+    elif fl == DONE:
+        fh = 'Done'
+    return act, fh, ww
+
+
 def query_urls():
     ww = 0
     urls = query_select("select rowid as mid, * from aviurl "
                         "order by updt desc")
     for uo in urls:
+        act, fh = get_act_fln(uo.flag)
+        if uo.flag in (WAIT, WORK):
+            ww = 1
         setattr(uo, '_short_url', short_it(uo.url))
-        fh = "FF"
-        fl = uo.flag
-        act = "start"
-        if fl is None or fl == STOP:
-            fh = 'start'
-        elif fl == WAIT:
-            fh = 'waiting'
-            act = "stop"
-            ww = 1
-        elif fl == WORK:
-            fh = 'working'
-            act = "stop"
-            ww = 1
-        elif fl == FAIL:
-            fh = 'retry'
-        elif fl == DONE:
-            fh = 'Done'
         setattr(uo, '_flag_act', act)
         setattr(uo, '_flag_name', fh)
     return urls, ww
@@ -138,15 +144,11 @@ def get_by_flag(f):
                         (f,))
 
 
-def set_flag(uobj, act):
-    fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
-    f = fm.get(act, act)
-    i = uobj
-    if isinstance(uobj, UOBJ):
-        i = uobj.mid
-        uobj.flag = f
+def set_db_flag(mid, flag):
+    #fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
+    #f = fm.get(act, act)
     with SDB() as c:
-        c.execute("update aviurl set flag=? where rowid=?", (f, i))
+        c.execute("update aviurl set flag=? where rowid=?", (flag, mid))
 
 
 def update_filename(uobj, dn, fn):
