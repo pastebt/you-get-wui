@@ -36,7 +36,7 @@ def html_head():
         var seq = 0;
         function talk() {
             var req = new XMLHttpRequest();
-            req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
+            req.open('GET', '/rest?mid=' + seq + "&act=talk");
             req.onload = function() {
             if (req.status >= 200 && req.status < 400) {
                 // Success!
@@ -44,7 +44,7 @@ def html_head():
                 for (i in datas) {
                     proc_one(datas[i]);
                 }
-                req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
+                req.open('GET', '/rest?mid=' + seq + "&act=talk");
                 req.send();
             } else {
                 // We reached our target server, but it returned an error
@@ -60,6 +60,12 @@ def html_head():
             seq = msg.seq;
             //alert("seq =" + seq);
             switch (msg.act) {
+            case "add":
+                var bas = document.getElementById(msg.elm);
+                var itm = document.createElement("tr");
+                itm.innerHTML = msg.data;
+                bas.insertBefore(itm, bas.childNodes[0]);
+                break;
             case "del":
                 var elm = document.getElementById(msg.elm);
                 elm.parentNode.removeChild(elm);
@@ -77,7 +83,7 @@ def html_head():
 
         function mid_act(mid, act) {
             var req = new XMLHttpRequest();
-            req.open('GET', '/rest?mid=' + mid + "&act=" + act, true);
+            req.open('GET', '/rest?mid=' + mid + "&act=" + act);
             req.send();
         }
         </script>
@@ -97,6 +103,19 @@ def html_form(msg):
         cpto = ""
 
     return msg + """
+        <script>
+        function add_new(sub) {
+            var fm = document.querySelector("form");
+            var fd = new FormData(fm);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/");
+            //fd.append("sub", sub);
+            xhr.send(fd);
+            return false;
+        }
+
+        </script>
+        <div id="post_msg"></div>
         <form action="/" method="post">
         <table>
             <tr><td>URL:</td>
@@ -109,8 +128,8 @@ def html_form(msg):
                 <td><input name="destdn" type="text" size=60 /></td>
             </tr>""" + cpto + """
             <tr><td> </td>
-                <td><input value="Submit" type="submit" name="sub"/>
-                    <input value="Start" type="submit" name="sub"/></td>
+                <td><input value="Submit" type="submit" name="sub" onclick="return add_new('Submit');"/>
+                    <input value="Start" type="submit" name="sub" onclick="return add_new('Start');"/></td>
             </tr>
         </table>
         </form>
@@ -132,7 +151,7 @@ def html_list():
             <td>flag</td>
             <td>del</td>
         <tr></thead>
-        <tbody>
+        <tbody id="urls_tbody">
         %for url in urls:
             <tr id="tr_{{url.mid}}">
                 <td id="td_name_{{url.mid}}"> <a title="{{url.updt}}"
@@ -259,14 +278,16 @@ def do_post():
             opt['cpto'] = copyto
         i = add_one_url(aviurl, avitil, opt)
         print("i =", i, "opts =", opt)
+        s2m.put({"who": "svr", "mid": i, "act": 'add'})
         if sub == 'Start':
-            #start_one(i)
             s2m.put({"who": "svr", "mid": i, "act": 'start'})
+
         body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                         title=avitil, url=aviurl)
     else:
         body = "Miss URL"
-    return html_head() + html_form(body)
+    #return html_head() + html_form(body)
+    return ""
 
 
 class FWSGISvr(ThreadingMixIn, WSGIServer):

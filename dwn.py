@@ -213,7 +213,7 @@ class Manager(Thread):
                 if act == 'start':
                     set_flag(self.s2m, mid, WAIT)
                     self.m2w.put(pick_url(mid))
-                elif act == 'del':
+                elif act in ('del', 'add'):
                     self.update_logs(msg)
             elif who == 'clt':  # http client send request
                 self.query_logs(msg)
@@ -250,8 +250,17 @@ class Manager(Thread):
 
     def update_logs(self, msg):
         l = {"seq": self.seq}
+        ls = [l]
         act = msg.get('act')
-        if act == 'del':
+        if act == 'add':
+            l['act'] = 'set'
+            l['elm'] = 'post_msg'
+            l['data'] = 'posted %d' %  msg['mid']   # TODO
+            self.seq += 1
+            l = {"seq": self.seq, 'act': 'add', 'elm':'urls_tbody',
+                 'data': '<td>abcd</td>'}  # TODO
+            ls.append(l)
+        elif act == 'del':
             l['act'] = 'del'
             l['elm'] = "tr_%s" % msg['mid']
         elif act in ('flag', 'per'):
@@ -263,5 +272,7 @@ class Manager(Thread):
             l['elm'] = "td_name_%s" % msg['mid']
             l['data'] = msg['data']
 
-        self.logs.append(l)
-        self.notice_all([l])
+        #self.logs.append(l)
+        #self.notice_all([l])
+        self.logs += ls
+        self.notice_all(ls)
