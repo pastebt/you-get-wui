@@ -150,6 +150,7 @@ class Manager(Thread):
         for w in self.works:
             self.m2w.put(None)      # FIXME should call worker.Terminal?
         self.s2m.put(None)
+        self.notice_all([{"seq": self.seq}])
 
     def run(self):
         # reset DB flags
@@ -176,11 +177,11 @@ class Manager(Thread):
             try:
                 msg = self.s2m.get(timeout=10)
             except Empty:
-                self.update_logs(None)
+                self.update_logs({})
                 continue
             if msg is None:
                 break
-            print("pid=%s, self.s2m.get=%s" % (os.getpid(), repr(msg)))
+            print("self.s2m.get = ", msg)
             who = msg.get('who')
             if who == 'worker':
                 self.update_logs(msg)
@@ -189,6 +190,8 @@ class Manager(Thread):
                 if act == 'start':
                     set_flag(self.s2m, mid, WAIT)
                     self.m2w.put(pick_url(mid))
+                elif act == 'del':
+                    self.update_logs(msg)
             elif who == 'clt':  # http client send request
                 self.query_logs(msg)
             else:
@@ -197,7 +200,7 @@ class Manager(Thread):
                 print("", file=sys.stderr)
 
     def notice_all(self, res):
-        print("self.reqs =", self.reqs)
+        print("notice_all self.reqs =", self.reqs)
         for r in self.reqs:
             q = r.get("req")
             if q:
@@ -205,18 +208,18 @@ class Manager(Thread):
         self.reqs = []
 
     def query_logs(self, msg):
-        seq = msg.get('seq', 0)
-        print("query_logs, seq =", seq)
-        sbg = self.logs[0].get('seq', 0) if self.logs else 0
-        sed = self.logs[-1].get('seq', 0) if self.logs else 0
-        if not self.logs or seq == sed:
+        print("query_logs, msg =", msg)
+        seq = msg['seq']
+        if not self.logs or seq == self.logs[-1]['seq']:
             self.reqs.append(msg)
             return
-        #TODO, if has logs, slice out and send back
         ret = []
-        for l in self.logs:
-            if l['seq'] > seq:
-                ret.append(l)
+        if seq == 0:
+            ret.append({"seq": self.logs[-1]['seq']})
+        else:
+            for l in self.logs:
+                if l['seq'] > seq:
+                    ret.append(l)
         print("ret =", ret)
         q = msg.get("req")
         if q:
@@ -224,18 +227,18 @@ class Manager(Thread):
 
     def update_logs(self, msg):
         l = {"seq": self.seq}
-        if msg:
-            if msg['act'] == 'del':
-                l['act'] = msg['act']
-                l['elm'] = "tr_%s" % msg['mid']
-            elif msg['act'] in ('flag', 'per'):
-                l['act'] = "set"
-                l['elm'] = "td_flag_%s" % msg['mid']
-                l['data'] = msg['data']
-            elif msg['act'] == 'title':
-                l['act'] = "set"
-                l['elm'] = "td_name_%s" % msg['mid']
-                l['data'] = msg['data']
+        act = msg.get('act')
+        if act == 'del':
+            l['act'] = 'del'
+            l['elm'] = "tr_%s" % msg['mid']
+        elif act in ('flag', 'per'):
+            l['act'] = "set"
+            l['elm'] = "td_flag_%s" % msg['mid']
+            l['data'] = msg['data']
+        elif act == 'title':
+            l['act'] = "set"
+            l['elm'] = "td_name_%s" % msg['mid']
+            l['data'] = msg['data']
 
         self.logs.append(l)
-        self.notice_all(l)
+        self.notice_all([l])

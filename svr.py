@@ -35,37 +35,30 @@ def html_head():
 
         var seq = 0;
         function talk() {
-            alert("start talk");
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
             req.onload = function() {
-            //alert(req.status);
             if (req.status >= 200 && req.status < 400) {
                 // Success!
                 var datas = JSON.parse(req.responseText);
-                //alert(datas);
                 for (i in datas) {
                     proc_one(datas[i]);
                 }
-                alert("after seq =" + seq);
                 req.open('GET', '/rest?mid=' + seq + "&act=talk", true);
-                alert("callback send");
                 req.send();
-                //talk();
             } else {
                 // We reached our target server, but it returned an error
-                //if (myObj.nam == undefined) 
                 alert("talk failed");
             }
             };
-            alert("send");
             req.send();
         }
 
         function proc_one(msg) {
-            if (msg.seq == undefined) { return; }
+            //alert("msg.seq =" + msg.seq);
+            //if (msg.seq == undefined) { return; }
             seq = msg.seq;
-            alert("seq =" + seq);
+            //alert("seq =" + seq);
             switch (msg.act) {
             case "del":
                 var elm = document.getElementById(msg.elm);
@@ -86,38 +79,6 @@ def html_head():
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + mid + "&act=" + act, true);
             req.send();
-            //reload_urls_list();
-        }
-
-        function reload_urls_list() {
-            var listobj = document.getElementById('url_list');
-            //alert(listobj);
-            // leftSection.parentNode.removeChild(leftSection);
-            var request = new XMLHttpRequest();
-            request.open('GET', '/list', true);
-            request.onload = function() {
-            //alert(request.status);
-            if (request.status >= 200 && request.status < 400) {
-                // Success!
-                //var data = JSON.parse(request.responseText);
-                //alert(request.responseText);
-                listobj.innerHTML = request.responseText;
-                var ww = document.getElementById('urls_tb').getAttribute("ww");
-                if (ww == 1) {
-                    //alert(ww)
-                    request.open('GET', '/list', true);
-                    request.send();
-                }
-            } else {
-            // We reached our target server, but it returned an error
-            }
-            };
-
-            request.onerror = function() {
-                // There was a connection error of some sort
-            };
-
-            request.send();
         }
         </script>
         </head>
@@ -223,11 +184,6 @@ def conv(src):
     return [ord(x) for x in src]
 
 
-#def start_one(mid):
-#    set_flag(mid, 'wait')
-#    s2m.put({"who": "clt", "mid": mid})
-
-
 @route('/play/<mid>')
 def server_static(mid):
     uobj = pick_url(mid)
@@ -249,24 +205,18 @@ def server_static(mid):
 
 @get('/rest')
 def rest():
-    mid = request.query.mid
+    mid = int(request.query.mid)
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
-    #print("rest: pid=%s, s2m=%s" % (os.getpid(), str(s2m)))
-    msg = {"who": "clt", "mid": mid, "act": act}
-    if act in ("start",):
-        #start_one(mid)
-        msg["who"] = "svr"
+    msg = {"who": "svr", "mid": mid, "act": act}
+    if act == "start":
+        pass
     elif act == 'del':
         del_one_url(mid)
     elif act == 'play':
         return html_play(mid)
     elif act == 'talk':
         q = Queue()
-        try:
-            mid = int(mid)
-        except ValueError:
-            mid = 0
         s2m.put({"who": "clt", "seq": mid, "req": q})
         r = q.get()
         return json.dumps(r)
@@ -287,7 +237,6 @@ def list():
 
 @get('/<:re:.*>')
 def index():
-    s2m.put({"who": "clt"})
     return html_head() + html_form("")
 
 
@@ -317,7 +266,6 @@ def do_post():
                         title=avitil, url=aviurl)
     else:
         body = "Miss URL"
-    s2m.put({"who": "clt"})
     return html_head() + html_form(body)
 
 
