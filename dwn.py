@@ -85,6 +85,7 @@ def show_tr_inner(uobj):
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
     for sect in cfg.sections():
+        got_til = ""
         if not sect.startswith('download_'):
             continue
         out = uobj.opts.get("dest")
@@ -106,11 +107,11 @@ def work(cfg, uobj, s2m):
         c = ""
         for l in p.stdout:
             e = "\n"
-            t = find_til(til, l)
-            if t:
-                print("got title:", t)
+            got_til = find_til(til, l)
+            if got_til:
+                print("got title:", got_til)
                 update_filename(uobj, os.path.join(dn, out),
-                                os.path.basename(t))
+                                os.path.basename(got_til))
                 s2m.put({"who": "worker", "mid": uobj.mid,
                          "act": "title", "data": show_title(uobj)})
             else:
@@ -125,7 +126,7 @@ def work(cfg, uobj, s2m):
 
         p.wait()
         print(sect, p.returncode)
-        if p.returncode == 0:
+        if p.returncode == 0 and got_til:
             print("mid %d done" % uobj.mid)
             set_flag(s2m, uobj, DONE)
             s2m.put({"who": "worker", "mid": uobj.mid,
