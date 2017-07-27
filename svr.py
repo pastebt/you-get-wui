@@ -121,7 +121,7 @@ def html_form(msg):
                 m = document.getElementById("avitil");
                 m.setAttribute("value", "");
             }};
-            //fd.append("sub", sub);
+            fd.append("sub", sub);
             xhr.send(fd);
             return false;
         }
@@ -238,7 +238,7 @@ def server_static(mid):
 def rest():
     mid = int(request.query.mid)
     act = request.query.act
-    print("rest: mid=%s, act=%s" % (mid, act))
+    #print("rest: mid=%s, act=%s" % (mid, act))
     msg = {"who": "svr", "mid": mid, "act": act}
     if act == "start":
         pass
@@ -310,7 +310,7 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        #pass
+        return
         sys.stderr.write("%s - - [%s] %s\n" %
                      (self.client_address[0],
                       self.log_date_time_string(),

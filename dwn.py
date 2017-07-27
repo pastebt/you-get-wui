@@ -133,7 +133,7 @@ def work(cfg, uobj, s2m):
             break
     else:
         print("mid %d failed" % uobj.mid)
-        set_flag(self.s2m, uobj, FAIL)
+        set_flag(s2m, uobj, FAIL)
 
     cpto = uobj.opts.get("cpto")
     pcmd = cfg['server'].get('post_cmd')
@@ -208,7 +208,7 @@ class Manager(Thread):
                 continue
             if msg is None:
                 break
-            print("self.s2m.get = ", msg)
+            #print("self.s2m.get = ", msg)
             # who: svr
             #   act:start
             #       del
@@ -237,7 +237,7 @@ class Manager(Thread):
                 print("", file=sys.stderr)
 
     def notice_all(self, res):
-        print("notice_all self.reqs =", self.reqs)
+        #print("notice_all self.reqs =", self.reqs)
         for r in self.reqs:
             q = r.get("req")
             if q:
@@ -245,7 +245,7 @@ class Manager(Thread):
         self.reqs = []
 
     def query_logs(self, msg):
-        print("query_logs, msg =", msg)
+        #print("query_logs, msg =", msg)
         seq = msg['seq']
         if not self.logs or seq == self.logs[-1]['seq']:
             self.reqs.append(msg)
@@ -257,7 +257,7 @@ class Manager(Thread):
             for l in self.logs:
                 if l['seq'] > seq:
                     ret.append(l)
-        print("ret =", ret)
+        #print("ret =", ret)
         q = msg.get("req")
         if q:
             q.put(ret)
