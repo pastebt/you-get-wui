@@ -111,15 +111,13 @@ def html_form(msg):
             var fd = new FormData(fm);
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/");
-            xhr.onload = function() {
-            if (req.status >= 200 && xhr.status < 400) {
+            xhr.onloadend = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
                 // Success!
                 var m = document.getElementById("post_msg");
                 m.innerHTML = xhr.responseText;
-                m = document.getElementById("aviurl");
-                m.setAttribute("value", "");
-                m = document.getElementById("avitil");
-                m.setAttribute("value", "");
+                document.getElementById("aviurl").value = "";
+                document.getElementById("avitil").value = "";
             }};
             fd.append("sub", sub);
             xhr.send(fd);

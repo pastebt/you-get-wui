@@ -269,10 +269,10 @@ class Manager(Thread):
         act = msg.get('act')
         if act == 'add':
             uo = pick_url(msg['mid'])
-            l['act'] = 'set'
-            l['elm'] = 'post_msg'
-            l['data'] = 'posted %d' %  msg['mid']   # TODO
-            self.seq += 1
+            #l['act'] = 'set'
+            #l['elm'] = 'post_msg'
+            #l['data'] = 'posted %d' %  msg['mid']   # TODO
+            #self.seq += 1
             l = {"seq": self.seq, 'act': 'add',
                  'elm':'tr_%s' % msg['mid'],
                  'data': show_tr_inner(uo)}
