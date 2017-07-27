@@ -103,6 +103,7 @@ def work(cfg, uobj, s2m):
         p = Popen(cmd, shell=True, bufsize=1,
                   universal_newlines=True, stdout=PIPE, stderr=STDOUT)
 
+        c = ""
         for l in p.stdout:
             e = "\n"
             t = find_til(til, l)
@@ -116,8 +117,10 @@ def work(cfg, uobj, s2m):
                 f = find_til(per, l)
                 if f:
                     e = "\r"
-                    s2m.put({"who": "worker", "mid": uobj.mid,
-                             "act": "per", "data": "per %s" % f})
+                    if f != c:
+                        c = f
+                        s2m.put({"who": "worker", "mid": uobj.mid,
+                                 "act": "per", "data": "dn %s%%" % f})
             print(l.rstrip(), end=e)
 
         p.wait()

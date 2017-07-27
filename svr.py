@@ -111,6 +111,16 @@ def html_form(msg):
             var fd = new FormData(fm);
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/");
+            xhr.onload = function() {
+            if (req.status >= 200 && xhr.status < 400) {
+                // Success!
+                var m = document.getElementById("post_msg");
+                m.innerHTML = xhr.responseText;
+                m = document.getElementById("aviurl");
+                m.setAttribute("value", "");
+                m = document.getElementById("avitil");
+                m.setAttribute("value", "");
+            }};
             //fd.append("sub", sub);
             xhr.send(fd);
             return false;
@@ -121,10 +131,10 @@ def html_form(msg):
         <form action="/" method="post">
         <table>
             <tr><td>URL:</td>
-                <td><input name="aviurl" type="text" size=60 /></td>
+                <td><input name="aviurl" id="aviurl" type="text" size=60 /></td>
             </tr>
             <tr><td>TITLE:</td>
-                <td><input name="avitil" type="text" size=60 /></td>
+                <td><input name="avitil" id="avitil" type="text" size=60 /></td>
             </tr>
             <tr><td>PATH:</td>
                 <td><input name="destdn" type="text" size=60 /></td>
@@ -262,7 +272,9 @@ def index():
 
 
 def req_str(name):
-    return bytearray(conv(request.forms.get(name, ""))).decode("utf8")
+    print(name, "=", repr(request.forms.get(name, "")))
+    #return bytearray(conv(request.forms.get(name, ""))).decode("utf8")
+    return request.forms.get(name, "")
 
 
 @post('/')  # or @route('/login', method='POST')
@@ -289,7 +301,7 @@ def do_post():
     else:
         body = "Miss URL"
     #return html_head() + html_form(body)
-    return ""
+    return body
 
 
 class FWSGISvr(ThreadingMixIn, WSGIServer):
