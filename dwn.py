@@ -60,7 +60,8 @@ def set_flag(s2m, uobj, flag):
         uobj.flag = flag
     set_db_flag(i, flag)
     act, fln = get_act_fln(flag)
-    s2m.put({"who": "worker", "mid": i, "act": "flag", "data": fln})
+    s2m.put({"who": "worker", "mid": i, "act": "flag", #"data": fln})
+             "data":  template("""<a href="#{{mid}}flag" onclick="return mid_act({{mid}}, '{{act}}');">{{name}}</a>""", mid=i, act=act, name=fln)})
 
 
 def show_title(uobj):
@@ -84,6 +85,8 @@ def show_tr_inner(uobj):
 
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
+    retcode = 1
+    got_til = ""
     for sect in cfg.sections():
         got_til = ""
         if not sect.startswith('download_'):
@@ -107,8 +110,9 @@ def work(cfg, uobj, s2m):
         c = ""
         for l in p.stdout:
             e = "\n"
-            got_til = find_til(til, l)
-            if got_til:
+            t = find_til(til, l)
+            if t:
+                got_til = t
                 print("got title:", got_til)
                 update_filename(uobj, os.path.join(dn, out),
                                 os.path.basename(got_til))
@@ -125,15 +129,17 @@ def work(cfg, uobj, s2m):
             print(l.rstrip(), end=e)
 
         p.wait()
-        print(sect, p.returncode)
-        if p.returncode == 0 and got_til:
+        retcode = p.returncode
+        print(sect, retcode)
+        if retcode == 0 and got_til:
             print("mid %d done" % uobj.mid)
             set_flag(s2m, uobj, DONE)
             s2m.put({"who": "worker", "mid": uobj.mid,
                      "act": "title", "data": show_title(uobj)})
             break
-    else:
-        print("mid %d failed" % uobj.mid)
+    if not got_til or retcode != 0:
+        print("mid %d failed, retcode=%d, til=%s" % (
+               uobj.mid, retcode, got_til))
         set_flag(s2m, uobj, FAIL)
 
     cpto = uobj.opts.get("cpto")
