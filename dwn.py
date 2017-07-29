@@ -83,63 +83,68 @@ def show_tr_inner(uobj):
                     url=uobj, til=t)
 
 
+def try_one_downloader(sect, uobj, s2m):
+    got_til = ""
+    out = uobj.opts.get("dest")
+    if not out:
+        out = './'
+    dn  = sect['dir']
+    til = sect['til']
+    per = sect['per']
+    cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out)
+    cmd = "cd %s && %s" % (dn, cmd)
+    if sect == 'download_dwm' and len(uobj.name) > 2:
+        cmd = cmd + " --title '%s'" % uobj.name
+    print("cmd =", cmd)
+    #print("til =", til)
+    p = Popen(cmd, shell=True, bufsize=1,
+              universal_newlines=True, stdout=PIPE, stderr=STDOUT)
+    c = ""
+    for l in p.stdout:
+        e = "\n"
+        t = find_til(til, l)
+        if t:
+            got_til = t
+            print("got title:", got_til)
+            update_filename(uobj, os.path.join(dn, out),
+                            os.path.basename(got_til))
+            s2m.put({"who": "worker", "mid": uobj.mid,
+                     "act": "title", "data": show_title(uobj)})
+        else:
+            f = find_til(per, l)
+            if f:
+                e = "\r"
+                if f != c:
+                    c = f
+                    s2m.put({"who": "worker", "mid": uobj.mid,
+                             "act": "per", "data": "dn %s%%" % f})
+        print(l.rstrip(), end=e)
+
+    p.wait()
+    return p.returncode, got_til
+
+
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
-    retcode = 1
-    got_til = ""
+    #retcode = 1
+    #got_til = ""
     for sect in cfg.sections():
-        got_til = ""
+        #got_til = ""
         if not sect.startswith('download_'):
             continue
-        out = uobj.opts.get("dest")
-        if not out:
-            out = './'
-        dn  = cfg[sect]['dir']
-        til = cfg[sect]['til']
-        per = cfg[sect]['per']
-        cmd = cfg[sect]['cmd'].format(URL=uobj.url, OUTDIR=out)
-        cmd = "cd %s && %s" % (dn, cmd)
-        if sect == 'download_dwm' and len(uobj.name) > 2:
-            cmd = cmd + " --title '%s'" % uobj.name
-        print("cmd =", cmd)
-        #print("til =", til)
-
-        p = Popen(cmd, shell=True, bufsize=1,
-                  universal_newlines=True, stdout=PIPE, stderr=STDOUT)
-
-        c = ""
-        for l in p.stdout:
-            e = "\n"
-            t = find_til(til, l)
-            if t:
-                got_til = t
-                print("got title:", got_til)
-                update_filename(uobj, os.path.join(dn, out),
-                                os.path.basename(got_til))
-                s2m.put({"who": "worker", "mid": uobj.mid,
-                         "act": "title", "data": show_title(uobj)})
-            else:
-                f = find_til(per, l)
-                if f:
-                    e = "\r"
-                    if f != c:
-                        c = f
-                        s2m.put({"who": "worker", "mid": uobj.mid,
-                                 "act": "per", "data": "dn %s%%" % f})
-            print(l.rstrip(), end=e)
-
-        p.wait()
-        retcode = p.returncode
-        print(sect, retcode)
+        retcode, got_til = try_one_downloader(cfg[sect], uobj, s2m)
+        print(sect, retcode, got_til)
         if retcode == 0 and got_til:
             print("mid %d done" % uobj.mid)
             set_flag(s2m, uobj, DONE)
             s2m.put({"who": "worker", "mid": uobj.mid,
                      "act": "title", "data": show_title(uobj)})
             break
-    if not got_til or retcode != 0:
-        print("mid %d failed, retcode=%d, til=%s" % (
-               uobj.mid, retcode, got_til))
+    #if not got_til or retcode != 0:
+    else:
+        #print("mid %d failed, retcode=%d, til=%s" % (
+        #       uobj.mid, retcode, got_til))
+        print("mid %d failed" % uobj.mid)
         set_flag(s2m, uobj, FAIL)
 
     cpto = uobj.opts.get("cpto")
