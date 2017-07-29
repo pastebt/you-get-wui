@@ -106,6 +106,23 @@ def try_one_downloader(sect, uobj, s2m):
     return p.returncode, got_til
 
 
+def upload_to(cmd, s2m, uobj):
+    p = Popen(cmd, shell=True, bufsize=1,
+              universal_newlines=True, stdout=PIPE, stderr=STDOUT)
+    s = ""
+    for l in p.stdout:
+        m = l.strip()
+        if m != s:
+            s = m
+            s2m.put({"who": "worker", "mid": uobj.mid,
+                     "act": "per", "data": "up %s%%" % m})
+    p.wait()
+    if p.returncode ==0:
+        set_flag(s2m, uobj, DONE)
+    else:
+        set_flag(s2m, uobj, FAIL)
+
+
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
     for sect in cfg.sections():
@@ -131,7 +148,8 @@ def work(cfg, uobj, s2m):
     if uobj.flag == DONE and cpto and pcmd:
         cmd = '%s "%s" "%s"' % (pcmd, cpto, uobj.path)
         print(cmd)
-        Popen(cmd, shell=True).wait()
+        #Popen(cmd, shell=True).wait()
+        upload_to(cmd, s2m, uobj)
 
 
 class Worker(Thread):
