@@ -254,14 +254,14 @@ def rest():
     return ""
 
 
-@get('/list')
-def list():
-    q = Queue()
-    try:
-        q.get(timeout=1)
-    except Exception as e:
-        print(e)
-    return html_list()
+#@get('/list')
+#def list():
+#    q = Queue()
+#    try:
+#        q.get(timeout=1)
+#    except Exception as e:
+#        print(e)
+#    return html_list()
 
 
 @get('/<:re:.*>')
