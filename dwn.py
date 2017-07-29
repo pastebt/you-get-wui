@@ -21,23 +21,6 @@ from db import pick_url, update_filename,  short_it
 from db import get_act_fln, set_db_flag, get_by_flag
 
 
-class WFP(object):
-    def __init__(self, who, out, mid=0):
-        self.out = out
-        self.mid = mid
-        self.left = ""
-        self.who = who
-
-    def write(self, dat):
-        self.left = self.left + dat
-        if self.left[-1] in '\r\n' or len(self.left) > 200:
-            self.out.put({"who": self.who, "mid": self.mid, "dat": self.left})
-            self.left = ""
-
-    def flush(self):
-        pass
-
-
 def find_til(til, line):
     for t in til.strip().split("\n"):
         m = re.match(t.strip(), line)
@@ -96,7 +79,6 @@ def try_one_downloader(sect, uobj, s2m):
     if sect == 'download_dwm' and len(uobj.name) > 2:
         cmd = cmd + " --title '%s'" % uobj.name
     print("cmd =", cmd)
-    #print("til =", til)
     p = Popen(cmd, shell=True, bufsize=1,
               universal_newlines=True, stdout=PIPE, stderr=STDOUT)
     c = ""
@@ -126,10 +108,7 @@ def try_one_downloader(sect, uobj, s2m):
 
 def work(cfg, uobj, s2m):
     set_flag(s2m, uobj, WORK)
-    #retcode = 1
-    #got_til = ""
     for sect in cfg.sections():
-        #got_til = ""
         if not sect.startswith('download_'):
             continue
         retcode, got_til = try_one_downloader(cfg[sect], uobj, s2m)
@@ -165,11 +144,9 @@ class Worker(Thread):
             uobj = self.m2w.get()
             if uobj is None:
                 break
-            #sys.stdout = WFP("worker", self.s2m, uobj.mid)
-            #sys.stderr = WFP("error", self.s2m, uobj.mid)
-            print("Process mid=%d bg" % uobj.mid)
+            #print("Process mid=%d bg" % uobj.mid)
             work(self.cfg, uobj, self.s2m)
-            print("Process mid=%d ed" % uobj.mid)
+            #print("Process mid=%d ed" % uobj.mid)
 
 
 class Manager(Thread):
@@ -300,7 +277,5 @@ class Manager(Thread):
             l['elm'] = "td_name_%s" % msg['mid']
             l['data'] = msg['data']
 
-        #self.logs.append(l)
-        #self.notice_all([l])
         self.logs += ls
         self.notice_all(ls)
