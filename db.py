@@ -42,7 +42,7 @@ def init_db(cfg):
             bgdt datetime,      -- when the url start download
             eddt datetime,      -- when the url finished download
             prog real,          -- progress, xx.x%
-            prio tinyint,       -- downlaod priority
+            prio tinyint,       -- download priority
             flag tinyint        -- status, WAIT, WORKING, DONE
         )''')
 
