@@ -16,7 +16,7 @@ from bottle import run, template, route, redirect
 from bottle import static_file
 
 from dwn import Manager
-from db import init_db #, set_flag
+from db import init_db
 from db import pick_url, query_urls
 from db import add_one_url, del_one_url
 
@@ -151,7 +151,6 @@ def html_form(msg):
 
 def html_list():
     urls, ww = query_urls()
-    #print("ww =", ww)
     return template("""
         %if urls:
         <table border=1 width="95%" id="urls_tb" ww={{ww}}>
@@ -254,16 +253,6 @@ def rest():
     return ""
 
 
-#@get('/list')
-#def list():
-#    q = Queue()
-#    try:
-#        q.get(timeout=1)
-#    except Exception as e:
-#        print(e)
-#    return html_list()
-
-
 @get('/<:re:.*>')
 def index():
     return html_head() + html_form("")
@@ -271,7 +260,6 @@ def index():
 
 def req_str(name):
     print(name, "=", repr(request.forms.get(name, "")))
-    #return bytearray(conv(request.forms.get(name, ""))).decode("utf8")
     return request.forms.get(name, "")
 
 
@@ -298,7 +286,6 @@ def do_post():
                         title=avitil, url=aviurl)
     else:
         body = "Miss URL"
-    #return html_head() + html_form(body)
     return body
 
 
