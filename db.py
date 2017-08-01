@@ -68,9 +68,6 @@ class UOBJ(object):
 
 
 def add_one_url(url, title="", opts={}):
-    #opts = {}
-    #if dest:
-    #    opts["dest"] = dest
     opts = json.dumps(opts)
     with SDB() as c:
         c.execute("insert into aviurl (url, name, updt, opts, flag) "
@@ -89,7 +86,6 @@ def query_select(q, p=()):
         urls = c.execute(q, p)
         desc = [x[0] for x in c.description]
         # have to finish this in "with" scope
-        #ret = [dict(zip(desc, url)) for url in urls]
         ret = [UOBJ(zip(desc, url)) for url in urls]
     return ret
 
@@ -123,12 +119,8 @@ def query_urls():
     urls = query_select("select rowid as mid, * from aviurl "
                         "order by updt desc")
     for uo in urls:
-        #act, fh = get_act_fln(uo.flag)
         if uo.flag in (WAIT, WORK):
             ww = 1
-        #setattr(uo, '_short_url', short_it(uo.url))
-        #setattr(uo, '_flag_act', act)
-        #setattr(uo, '_flag_name', fh)
     return urls, ww
 
 
