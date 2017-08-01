@@ -50,7 +50,7 @@ def set_flag(s2m, uobj, flag):
 def show_title(uobj):
     return template("""<a title="{{url.updt}}"
                 %if url.flag == done:
-                    href="/rest?mid={{url.mid}}&act=play" target='_blank'
+                    href="/rest?mid={{url.mid}}&amp;act=play" target='_blank'
                 %end
                 >{{url.name}}</a>""", url=uobj, done=DONE)
 

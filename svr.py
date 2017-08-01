@@ -165,7 +165,7 @@ def html_list():
             <tr id="tr_{{url.mid}}">
                 <td id="td_name_{{url.mid}}"> <a title="{{url.updt}}"
                 %if url._flag_name == "Done":
-                    href="/rest?mid={{url.mid}}&act=play" target='_blank'
+                    href="/rest?mid={{url.mid}}&amp;act=play" target='_blank'
                 %end
                 >{{url.name}}</a> </td>
                 <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
