@@ -99,7 +99,7 @@ def html_form(msg):
     if pcmd:
         cpto = """
             <tr><td>CPTO:</td>
-                <td><input name="copyto" type="text" size=60 /></td>
+                <td><input name="copyto" id="copyto" type="text" size=60 /></td>
             </tr>"""
     else:
         cpto = ""
@@ -135,7 +135,7 @@ def html_form(msg):
                 <td><input name="avitil" id="avitil" type="text" size=60 /></td>
             </tr>
             <tr><td>PATH:</td>
-                <td><input name="destdn" type="text" size=60 /></td>
+                <td><input name="destdn" id="destdn" type="text" size=60 /></td>
             </tr>""" + cpto + """
             <tr><td> </td>
                 <td><input value="Submit" type="submit" name="sub" onclick="return add_new('Submit');"/>
@@ -251,6 +251,10 @@ def rest():
         s2m.put({"who": "clt", "seq": mid, "req": q})
         r = q.get()
         return json.dumps(r)
+    elif act == 'edit':
+        uobj = pick_url(mid)
+        ret = []
+        return json.dumps(ret)
     #redirect("/")
     s2m.put(msg)
     return ""
