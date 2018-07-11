@@ -158,7 +158,7 @@ def html_list():
             <td>Title</td>
             <td>url</td>
             <td>flag</td>
-            <td>del</td>
+            <td>func</td>
         <tr></thead>
         <tbody id="urls_tbody">
         %for url in urls:
@@ -172,7 +172,10 @@ def html_list():
                 <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="return mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
                 <td id="td_func_{{url.mid}}">
                 <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">
-                del</a> </td>
+                del</a>
+                <a href="#{{url.mid}}edit" onclick="return mid_act({{url.mid}}, 'edit');">
+                edit</a>
+                </td>
             </tr>
         %end
         </tbody>
