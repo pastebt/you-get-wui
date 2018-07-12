@@ -75,6 +75,9 @@ def html_head():
                 var elm = document.getElementById(msg.elm);
                 elm.innerHTML = msg.data;
                 break;
+            case "edit":
+                document.getElementById(msg.elm).value = msg.data;
+                break;
             case undefined:
                 break;
             default:
@@ -85,8 +88,33 @@ def html_head():
         function mid_act(mid, act) {
             var req = new XMLHttpRequest();
             req.open('GET', '/rest?mid=' + mid + "&act=" + act);
+            if (act == "edit") {
+                req.onload = function() {
+                if (req.status >= 200 && req.status < 400) {
+                    // Success!
+                    var datas = JSON.parse(req.responseText);
+                    for (i in datas) {
+                        proc_one_local(datas[i]);
+                    }
+                } else {
+                    // We reached our target server, but it returned an error
+                    alert("talk failed");
+                }};
+            }
             req.send();
             return false;
+        }
+
+        function proc_one_local(msg) {
+            switch (msg.act) {
+            case "edit":
+                document.getElementById(msg.elm).value = msg.data;
+                break;
+            case undefined:
+                break;
+            default:
+                alert("Local Unknown act: " + msg.act);
+            }
         }
         </script>
         </head>
@@ -253,7 +281,11 @@ def rest():
         return json.dumps(r)
     elif act == 'edit':
         uobj = pick_url(mid)
-        ret = []
+        ret = [{"elm": "aviurl", "act": "edit", "data": uobj.url},
+               {"elm": "avitil", "act": "edit", "data": uobj.name},
+               {"elm": "destdn", "act": "edit", "data": uobj.opts.get("dest")},
+               {"elm": "copyto", "act": "edit", "data": uobj.opts.get("cpto")},
+               ]
         return json.dumps(ret)
     #redirect("/")
     s2m.put(msg)
