@@ -52,7 +52,7 @@ def show_title(uobj):
                 %if url.flag == done:
                     href="/rest?mid={{url.mid}}&amp;act=play" target='_blank'
                 %end
-                >{{url.name}}</a>""", url=uobj, done=DONE)
+                >{{url._short_name}}</a>""", url=uobj, done=DONE)
 
 
 def show_tr_inner(uobj):
@@ -62,8 +62,11 @@ def show_tr_inner(uobj):
                        <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
                        <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="return mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
                        <td id="td_func_{{url.mid}}">
-                       <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">del</a> </td>""",
-                    url=uobj, til=t)
+                       <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">
+                       del</a>
+                       <a href="#{{url.mid}}edit" onclick="return mid_act({{url.mid}}, 'edit');">
+                       edit</a>
+                       </td>""", url=uobj, til=t)
 
 
 def try_one_downloader(sect, uobj, s2m):

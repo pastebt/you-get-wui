@@ -195,7 +195,7 @@ def html_list():
                 %if url._flag_name == "Done":
                     href="/rest?mid={{url.mid}}&amp;act=play" target='_blank'
                 %end
-                >{{url.name}}</a> </td>
+                >{{url._short_name}}</a> </td>
                 <td> <a href="{{url.url}}" target='_blank'>{{url._short_url}}</a> </td>
                 <td id="td_flag_{{url.mid}}"> <a href="#{{url.mid}}flag" onclick="return mid_act({{url.mid}}, '{{url._flag_act}}');">{{url._flag_name}}</a> </td>
                 <td id="td_func_{{url.mid}}">

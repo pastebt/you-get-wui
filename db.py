@@ -53,6 +53,7 @@ class UOBJ(object):
             setattr(self, dat[0], dat[1])
 
         act, fh = get_act_fln(self.flag)
+        setattr(self, '_short_name', short_it(self.name, 40))
         setattr(self, '_short_url', short_it(self.url))
         setattr(self, '_flag_act', act)
         setattr(self, '_flag_name', fh)
