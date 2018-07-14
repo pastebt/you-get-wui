@@ -53,7 +53,7 @@ class UOBJ(object):
             setattr(self, dat[0], dat[1])
 
         act, fh = get_act_fln(self.flag)
-        setattr(self, '_short_name', short_it(self.name, 40))
+        setattr(self, '_short_name', short_it(self.name, 50))
         setattr(self, '_short_url', short_it(self.url))
         setattr(self, '_flag_act', act)
         setattr(self, '_flag_name', fh)
@@ -150,6 +150,7 @@ def set_db_flag(mid, flag):
 
 def update_filename(uobj, dn, fn):
     uobj.name = os.path.basename(fn)
+    uobj._short_name = short_it(uobj.name, 50)
     uobj.path = os.path.join(dn, fn)
     with SDB() as c:
         urls = c.execute("update aviurl set name=?, path=? where rowid=?",
