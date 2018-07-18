@@ -151,16 +151,22 @@ def html_form(msg):
             xhr.send(fd);
             return false;
         }
-
+        function clean_input(eid) {
+            document.getElementById(eid).value = "";
+        }
         </script>
         <div id="post_msg"></div>
         <form action="/" method="post">
         <table>
             <tr><td>URL:</td>
-                <td><input name="aviurl" id="aviurl" type="text" size=60 /></td>
+                <td><input name="aviurl" id="aviurl" type="text" size=60 />
+                    <a href=# onclick="return clean_input('aviurl');">clr</a>
+                </td>
             </tr>
             <tr><td>TITLE:</td>
-                <td><input name="avitil" id="avitil" type="text" size=60 /></td>
+                <td><input name="avitil" id="avitil" type="text" size=60 />
+                    <a href=# onclick="return clean_input('avitil');">clr</a>
+                </td>
             </tr>
             <tr><td>PATH:</td>
                 <td><input name="destdn" id="destdn" type="text" size=60 /></td>
