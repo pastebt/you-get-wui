@@ -77,7 +77,7 @@ def try_one_downloader(sect, uobj, s2m):
     dn  = sect['dir']
     til = sect['til']
     per = sect['per']
-    cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out)
+    cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out, TITLE=uobj.name.strip())
     cmd = "cd %s && %s" % (dn, cmd)
     if sect == 'download_dwm' and len(uobj.name) > 2:
         cmd = cmd + " --title '%s'" % uobj.name

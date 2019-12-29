@@ -18,7 +18,7 @@ from bottle import static_file
 from dwn import Manager
 from db import init_db
 from db import pick_url, query_urls
-from db import add_one_url, del_one_url
+from db import add_one_url, del_one_url, chg_one_url
 
 
 def html_head():
@@ -172,8 +172,15 @@ def html_form(msg):
                 <td><input name="destdn" id="destdn" type="text" size=60 /></td>
             </tr>""" + cpto + """
             <tr><td> </td>
-                <td><input value="Submit" type="submit" name="sub" onclick="return add_new('Submit');"/>
-                    <input value="Start" type="submit" name="sub" onclick="return add_new('Start');"/></td>
+                <td><input value="Submit" type="submit" name="sub"
+                           onclick="return add_new('Submit');"/>
+                    <input value="Start" type="submit" name="sub"
+                           onclick="return add_new('Start');"/>
+                    <input value="Update" type="submit" name="sub"
+                           id="chg"
+                           onclick="return add_new('Update');"/>
+                    <input type="hidden" name="chgmid" id="chgmid" />
+                </td>
             </tr>
         </table>
         </form>
@@ -208,7 +215,7 @@ def html_list():
                 <a href="#{{url.mid}}del" onclick="return mid_act({{url.mid}}, 'del');">
                 del</a>
                 <a href="#{{url.mid}}edit" onclick="return mid_act({{url.mid}}, 'edit');">
-                edit</a>
+                load</a>
                 </td>
             </tr>
         %end
@@ -291,6 +298,7 @@ def rest():
                {"elm": "avitil", "act": "edit", "data": uobj.name},
                {"elm": "destdn", "act": "edit", "data": uobj.opts.get("dest")},
                {"elm": "copyto", "act": "edit", "data": uobj.opts.get("cpto")},
+               {"elm": "chgmid", "act": "edit", "data": str(mid)},
                ]
         return json.dumps(ret)
     #redirect("/")

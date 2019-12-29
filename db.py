@@ -82,6 +82,12 @@ def del_one_url(mid):
         c.execute("delete from aviurl where rowid=?", (mid,))
 
 
+def chg_one_url(mid, url, title, opts):
+    with SDB() as c:
+        c.execute("update aviurl set url=?, name=?, opts=? "
+                  "where rowid=?", (url, title, opts, mid))
+
+
 def query_select(q, p=()):
     with SDB() as c:
         urls = c.execute(q, p)
