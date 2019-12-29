@@ -109,6 +109,7 @@ def html_head():
             switch (msg.act) {
             case "edit":
                 document.getElementById(msg.elm).value = msg.data;
+                document.getElementById("chgbt").style.display = "initial";
                 break;
             case undefined:
                 break;
@@ -177,7 +178,7 @@ def html_form(msg):
                     <input value="Start" type="submit" name="sub"
                            onclick="return add_new('Start');"/>
                     <input value="Update" type="submit" name="sub"
-                           id="chg"
+                           id="chgbt" style="display:none"
                            onclick="return add_new('Update');"/>
                     <input type="hidden" name="chgmid" id="chgmid" />
                 </td>
@@ -324,14 +325,21 @@ def do_post():
     avitil = req_str('avitil')
     destdn = req_str('destdn')
     copyto = req_str('copyto')
+    chgmid = req_str('chgmid')
     
     if len(aviurl) > 4:
         opt = {'dest': destdn}
         if copyto:
             opt['cpto'] = copyto
-        i = add_one_url(aviurl, avitil, opt)
-        print("i =", i, "opts =", opt)
-        s2m.put({"who": "svr", "mid": i, "act": 'add'})
+        if sub == 'Update' and chgmid:
+            chgmid = int(chgmid)
+            print("aviurl=", aviurl, "avitil=", avitil, "chgmid=", chgmid)
+            i = chg_one_url(chgmid, aviurl, avitil, opt)
+            s2m.put({"who": "svr", "mid": chgmid, "act": 'chg'})
+        else:
+            i = add_one_url(aviurl, avitil, opt)
+            print("i =", i, "opts =", opt)
+            s2m.put({"who": "svr", "mid": i, "act": 'add'})
         if sub == 'Start':
             s2m.put({"who": "svr", "mid": i, "act": 'start'})
 

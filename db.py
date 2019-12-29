@@ -83,6 +83,7 @@ def del_one_url(mid):
 
 
 def chg_one_url(mid, url, title, opts):
+    opts = json.dumps(opts)
     with SDB() as c:
         c.execute("update aviurl set url=?, name=?, opts=? "
                   "where rowid=?", (url, title, opts, mid))
