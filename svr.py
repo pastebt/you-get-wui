@@ -15,9 +15,8 @@ from bottle import get, post, request
 from bottle import run, template, route, redirect
 from bottle import static_file
 
-from dwn import Manager
-from db import init_db
-from db import pick_url, query_urls
+from dwn import Manager, show_title
+from db import init_db, pick_url, query_urls
 from db import add_one_url, del_one_url, chg_one_url
 
 
@@ -336,6 +335,10 @@ def do_post():
             print("aviurl=", aviurl, "avitil=", avitil, "chgmid=", chgmid)
             i = chg_one_url(chgmid, aviurl, avitil, opt)
             s2m.put({"who": "svr", "mid": chgmid, "act": 'chg'})
+            uobj = pick_url(chgmid)
+            s2m.put({"who": "worker", "mid": uobj.mid,
+                     "act": "title", "data": show_title(uobj)})
+                     #"act": "title", "data": uobj.name})
         else:
             i = add_one_url(aviurl, avitil, opt)
             print("i =", i, "opts =", opt)
