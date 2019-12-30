@@ -165,7 +165,7 @@ def update_filename(uobj, dn, fn):
 
 
 def dump_urls():
-    for uobj in query_urls():
+    for uobj in query_urls()[0]:
         print(uobj.name, "\n", uobj.url, "\n", uobj.path, "\n")
 
 
