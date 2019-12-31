@@ -79,6 +79,7 @@ def try_one_downloader(sect, uobj, s2m):
     dn  = sect['dir']
     til = sect['til']
     per = sect['per']
+    upd = "^uploaded ([.0-9]+)%%.*$"
     cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out, PLAYLIST=pls,
                              TITLE=uobj.name.strip(), POSTURI=cpt)
     cmd = "cd %s && %s" % (dn, cmd)
@@ -99,13 +100,15 @@ def try_one_downloader(sect, uobj, s2m):
             s2m.put({"who": "worker", "mid": uobj.mid,
                      "act": "title", "data": show_title(uobj)})
         else:
-            f = find_til(per, l)
-            if f:
-                e = "\r"
-                if f != c:
-                    c = f
-                    s2m.put({"who": "worker", "mid": uobj.mid,
-                             "act": "per", "data": "dn %s%%" % f})
+            for pat, nam in ((per, "dn"), (upd, "up")):
+                f = find_til(pat, l)
+                if f:
+                    e = "\r"
+                    if f != c:
+                        c = f
+                        s2m.put({"who": "worker", "mid": uobj.mid,
+                                 "act": "per", "data": "%s %s%%" % (nam, f)})
+            
         print(l.rstrip(), end=e)
 
     p.wait()
@@ -149,7 +152,7 @@ def work(cfg, uobj, s2m):
         print("mid %d failed" % uobj.mid)
         set_flag(s2m, uobj, FAIL)
 
-    if "POSTURI" in sect['cmd']:
+    if "POSTURI" in cfg[sect]['cmd']:
         return
 
     cpto = uobj.opts.get("cpto")
