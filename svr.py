@@ -95,6 +95,7 @@ def html_head():
                     for (i in datas) {
                         proc_one_local(datas[i]);
                     }
+                    document.getElementById("chgbt").style.display = "initial";
                 } else {
                     // We reached our target server, but it returned an error
                     alert("talk failed");
@@ -107,8 +108,19 @@ def html_head():
         function proc_one_local(msg) {
             switch (msg.act) {
             case "edit":
-                document.getElementById(msg.elm).value = msg.data;
-                document.getElementById("chgbt").style.display = "initial";
+                if (msg.elm == "plylst") {
+                    p = document.getElementById(msg.elm).children;
+                    for (i = 0; i < p.length; i++) {
+                        elm = p[i];
+                        if (elm.value == msg.data) {
+                            elm.checked = true;
+                        } else {
+                            elm.checked = false;
+                        }
+                    }
+                } else {
+                    document.getElementById(msg.elm).value = msg.data;
+                }
                 break;
             case undefined:
                 break;
@@ -171,6 +183,14 @@ def html_form(msg):
             <tr><td>PATH:</td>
                 <td><input name="destdn" id="destdn" type="text" size=60 /></td>
             </tr>""" + cpto + """
+            <tr><td>PLIST:</td>
+                <td id="plylst">
+                    <input type="radio" name="plylst"
+                           value="auto" checked>Auto
+                    <input type="radio" name="plylst" value="true">Yes
+                    <input type="radio" name="plylst" value="none">Not
+                </td>
+            </tr>
             <tr><td> </td>
                 <td><input value="Submit" type="submit" name="sub"
                            onclick="return add_new('Submit');"/>
@@ -299,6 +319,8 @@ def rest():
                {"elm": "destdn", "act": "edit", "data": uobj.opts.get("dest")},
                {"elm": "copyto", "act": "edit", "data": uobj.opts.get("cpto")},
                {"elm": "chgmid", "act": "edit", "data": str(mid)},
+               {"elm": "plylst", "act": "edit",
+                "data": uobj.opts.get("plst", "none")},
                ]
         return json.dumps(ret)
     #redirect("/")
@@ -318,18 +340,21 @@ def req_str(name):
 
 @post('/')  # or @route('/login', method='POST')
 def do_post():
-    sub = request.forms.get('sub')
-    print("sub =", sub)
-    aviurl = request.forms.get('aviurl', "").strip()
+    #sub = request.forms.get('sub')
+    #print("sub =", sub)
+    sub = req_str('sub')
+    #aviurl = request.forms.get('aviurl', "").strip()
+    aviurl = req_str('aviurl').strip()
     avitil = req_str('avitil')
     destdn = req_str('destdn')
     copyto = req_str('copyto')
     chgmid = req_str('chgmid')
+    plylst = req_str('plylst')
     
     if len(aviurl) > 4:
-        opt = {'dest': destdn}
-        if copyto:
-            opt['cpto'] = copyto
+        opt = {'dest': destdn, 'plst': plylst, 'cpto': copyto}
+        #if copyto:
+        #    opt['cpto'] = copyto
         if sub == 'Update' and chgmid:
             chgmid = int(chgmid)
             print("aviurl=", aviurl, "avitil=", avitil, "chgmid=", chgmid)
