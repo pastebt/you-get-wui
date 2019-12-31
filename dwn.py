@@ -74,10 +74,13 @@ def try_one_downloader(sect, uobj, s2m):
     out = uobj.opts.get("dest")
     if not out:
         out = './'
+    pls = {"true": "-p", "none": "-P"}.get(uobj.opts.get("plst"), "")
+    cpt = uobj.opts.get("cpto", "")
     dn  = sect['dir']
     til = sect['til']
     per = sect['per']
-    cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out, TITLE=uobj.name.strip())
+    cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out, PLAYLIST=pls,
+                             TITLE=uobj.name.strip(), POSTURI=cpt)
     cmd = "cd %s && %s" % (dn, cmd)
     if sect == 'download_dwm' and len(uobj.name) > 2:
         cmd = cmd + " --title '%s'" % uobj.name
@@ -145,6 +148,9 @@ def work(cfg, uobj, s2m):
         #       uobj.mid, retcode, got_til))
         print("mid %d failed" % uobj.mid)
         set_flag(s2m, uobj, FAIL)
+
+    if "POSTURI" in sect['cmd']:
+        return
 
     cpto = uobj.opts.get("cpto")
     pcmd = cfg['server'].get('post_cmd')

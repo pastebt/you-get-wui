@@ -185,10 +185,9 @@ def html_form(msg):
             </tr>""" + cpto + """
             <tr><td>PLIST:</td>
                 <td id="plylst">
-                    <input type="radio" name="plylst"
-                           value="auto" checked>Auto
+                    <input type="radio" name="plylst" value="auto">Auto
                     <input type="radio" name="plylst" value="true">Yes
-                    <input type="radio" name="plylst" value="none">Not
+                    <input type="radio" name="plylst" value="none" checked>Not
                 </td>
             </tr>
             <tr><td> </td>
