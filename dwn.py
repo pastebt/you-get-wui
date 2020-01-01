@@ -79,7 +79,7 @@ def try_one_downloader(sect, uobj, s2m):
     dn  = sect['dir']
     til = sect['til']
     per = sect['per']
-    upd = "^uploaded ([.0-9]+)%%.*$"
+    upd = "^uploaded ([.0-9]+).*$"
     cmd = sect['cmd'].format(URL=uobj.url, OUTDIR=out, PLAYLIST=pls,
                              TITLE=uobj.name.strip(), POSTURI=cpt)
     cmd = "cd %s && %s" % (dn, cmd)
