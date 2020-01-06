@@ -247,6 +247,12 @@ def html_list():
 def html_play(mid):
     uobj = pick_url(mid)
     name = os.path.basename(uobj.path)
+    # type='video/x-matroska; codecs="theora, vorbis"'
+    # type="video/mp4"
+    # type="video/webm"
+    # https://stackoverflow.com/questions/3044685/playing-flv-in-website
+    # https://medium.com/@eyevinntechnology/demystifying-html5-video-player-e480846328f0    
+    # https://medium.com/@eyevinntechnology/how-to-build-your-own-streaming-video-html-player-6ee85d4d078a
     #controls autoplay style="display: block; margin: auto;"
     return template("""
         <html>
