@@ -5,7 +5,8 @@ import sys
 import json
 import configparser
 from queue import Queue
-from urllib.parse import quote
+from subprocess import Popen
+from urllib.parse import quote, unquote
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
 from socketserver import ThreadingMixIn
@@ -281,8 +282,18 @@ def conv(src):
     return [ord(x) for x in src]
 
 
+PLAY="vlc"
+
+
 @route('/play/<mid>')
 def server_static(mid):
+    #print("/play/", mid)
+    if '%' in mid:
+        cmd = [PLAY, unquote(mid)]
+        print("cmd", cmd)
+        p = Popen(cmd)
+        #p.wait()
+        return
     uobj = pick_url(mid)
     if uobj and uobj.path:
         return static_file(os.path.basename(uobj.path),
@@ -389,7 +400,7 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        return
+        #return
         sys.stderr.write("%s - - [%s] %s\n" %
                      (self.client_address[0],
                       self.log_date_time_string(),
@@ -401,6 +412,15 @@ class MySvr(WSGIRefServer):
         options['server_class'] = FWSGISvr
         options['handler_class'] = MyHandler
         WSGIRefServer.__init__(self, host, port, **options)
+
+
+def find_tool():
+    for t in ('vlc', 'ffplay', 'avplay'):
+        p = Popen(['which', t])
+        p.wait()
+        if p.returncode == 0:
+            return t
+    return ""
 
 
 def usage():
@@ -419,6 +439,7 @@ if __name__ == '__main__':
     cfg = configparser.ConfigParser()
     cfg.read(cfgfn)
 
+    PLAY=find_tool()
     init_db(cfg)
     mon = Manager(cfg)
     s2m = mon.s2m
