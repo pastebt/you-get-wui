@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import configparser
+import urllib.request
 from queue import Queue
 from subprocess import Popen
 from urllib.parse import quote, unquote
@@ -285,15 +286,32 @@ def conv(src):
 PLAY="vlc"
 
 
+def popen_play(url):
+    cmd = [PLAY, url]
+    # try subtitle
+    n, e = os.path.splitext(url)
+    ln = ""
+    for ext in (".srt", ".ass"):
+        try:
+            ln, hd = urllib.request.urlretrieve(n + ext, "/tmp/sub" + ext)
+        except:
+            pass
+    #if ln:
+    #    cmd += ["--sub" if PLAY=="vlc" else "--sub_name", ln]
+    # ffplay -vf subtitles="/path/subtitles.srt" example.mp4
+    if ln and PLAY=="vlc":
+        cmd += ["--sub", ln]
+    print("cmd", cmd)
+    p = Popen(cmd)
+    #p.wait()
+
+
 @route('/play/<mid>')
 def server_static(mid):
     #print("/play/", mid)
     if '%' in mid:
-        cmd = [PLAY, unquote(mid)]
-        print("cmd", cmd)
-        p = Popen(cmd)
-        #p.wait()
-        return
+        popen_play(unquote(mid))
+        return ""
     uobj = pick_url(mid)
     if uobj and uobj.path:
         return static_file(os.path.basename(uobj.path),
