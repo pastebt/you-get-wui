@@ -291,7 +291,7 @@ def popen_play(url):
     # try subtitle
     n, e = os.path.splitext(url)
     ln = ""
-    for ext in (".srt", ".ass"):
+    for ext in (".chs.srt", ".cht.srt", ".srt", ".ass"):
         try:
             ln, hd = urllib.request.urlretrieve(n + ext, "/tmp/sub" + ext)
         except:
@@ -299,8 +299,11 @@ def popen_play(url):
     #if ln:
     #    cmd += ["--sub" if PLAY=="vlc" else "--sub_name", ln]
     # ffplay -vf subtitles="/path/subtitles.srt" example.mp4
-    if ln and PLAY=="vlc":
-        cmd += ["--sub", ln]
+    if ln:
+        if PLAY=="vlc":
+            cmd += ["--sub-file", ln]
+        else:
+            cmd += ["-vf", 'subtitles="%s"' % ln]
     print("cmd", cmd)
     p = Popen(cmd)
     #p.wait()
