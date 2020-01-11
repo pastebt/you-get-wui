@@ -421,7 +421,8 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MyHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        #return
+        if not DEBUG:
+            return
         sys.stderr.write("%s - - [%s] %s\n" %
                      (self.client_address[0],
                       self.log_date_time_string(),
@@ -451,6 +452,8 @@ def usage():
     sys.exit(1)
 
 
+DEBUG = True
+
 if __name__ == '__main__':
     if len(sys.argv) not in (2, 3) or sys.argv[1] != '-c':
         usage()
@@ -459,6 +462,7 @@ if __name__ == '__main__':
         cfgfn = sys.argv[2]
     cfg = configparser.ConfigParser()
     cfg.read(cfgfn)
+    DEBUG = cfg['server']['debug'].lower() in ("1", "y", "yes", "true")
 
     PLAY=find_tool()
     init_db(cfg)
