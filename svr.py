@@ -4,13 +4,12 @@ import os
 import sys
 import json
 import configparser
-import urllib.request
 from queue import Queue
 from subprocess import Popen
+from urllib.request import urlretrieve
 from urllib.parse import quote, unquote
-from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
-
 from socketserver import ThreadingMixIn
+from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
 from bottle import WSGIRefServer
 from bottle import get, post, request
@@ -293,7 +292,8 @@ def popen_play(url):
     ln = ""
     for ext in (".chs.srt", ".cht.srt", ".srt", ".ass"):
         try:
-            ln, hd = urllib.request.urlretrieve(n + ext, "/tmp/sub" + ext)
+            #ln, hd = urllib.request.urlretrieve(n + ext, "/tmp/sub" + ext)
+            ln, hd = urlretrieve(n + ext, "/tmp/sub" + ext)
         except:
             pass
     #if ln:
